@@ -1,3 +1,42 @@
+
+/* https://chat.openai.com/share/1fcd05cf-4e17-47ed-9143-8380d46b818b */
+// Create a Proxy around the Graphics instance
+const _gProxy = (g: Gg) => new Proxy(g, {
+    // @ts-ignore
+    drawEnabled: true,
+    
+    get(target, prop) {
+        if (prop === 'if') {
+            return (condition: boolean) => {
+
+                // @ts-ignore
+                this.drawEnabled = condition;
+            };
+
+          } else if (prop === 'else') {
+
+            return () => {
+              // @ts-ignore
+              this.drawEnabled = !this.drawEnabled
+            }
+                // @ts-ignore
+        } else if (typeof target[prop] === 'function') {
+            return (...args: any[]) => {
+                // @ts-ignore
+                if (this.drawEnabled) {
+                    // @ts-ignore
+                    return target[prop](...args);
+                }
+            };
+        } else {
+            // @ts-ignore
+            return target[prop];
+        }
+    }
+});
+
+
+
 class Mm {
   static init(c: HTMLCanvasElement) {
 
@@ -69,6 +108,14 @@ class Mm {
 }
 
 class Gg {
+  else() {
+    throw new Error("Method not implemented.");
+  }
+
+  if(scn1: boolean) {
+    throw new Error("Method not implemented.");
+  }
+
   static init(e: HTMLElement): [Gg, HTMLCanvasElement] {
     let c = document.createElement('canvas');
     c.width = w
@@ -140,6 +187,10 @@ class Gg {
     this.cx.fillRect(x, y, w, h)
   }
 
+  fr_c(x: number, y: number, w: number, h: number) {
+    this.cx.fillRect(x - w/2, y - h/2, w, h)
+  }
+
   sr(w: number, h: number) {
     this.cx.strokeRect(-w/2, -h/2, w, h)
   }
@@ -186,7 +237,7 @@ const grn = '#60e331'
 const blu = '#319ae3'
 
 /* https://chat.openai.com/share/f4ff1e1b-f9e4-468f-8b7d-1c05ddd20dde */
-function adjustSaturation(originalColorHex, saturationChange) {
+function adjustSaturation(originalColorHex: string, saturationChange: number) {
     // Convert the original color to an RGBA format
     const r = parseInt(originalColorHex.substring(1, 3), 16);
     const g = parseInt(originalColorHex.substring(3, 5), 16);
@@ -229,7 +280,7 @@ const m_blu = _sat('#319ae3')
 
 
 const gor = 1.61803;
-const epsi = 1e-5;
+const epsi = 1e-4;
 
 const pi = Math.PI
 const pi2 = pi * 2
@@ -241,13 +292,14 @@ const h16p = pi / 16
 const h64p = pi / 64
 
 
-let life = 0
-let dt = 0
+let dt = 16 
+let life = dt
 
 function app(e: HTMLElement) {
 
-  let [g, c] = Gg.init(e)
+  let [_g, c] = Gg.init(e)
   let m = Mm.init(c)
+  let g = _gProxy(_g)
 
   let last_t: number | undefined;
   window.requestAnimationFrame(step)
@@ -255,7 +307,7 @@ function app(e: HTMLElement) {
     loop(m, g)
 
 
-    dt = t - (last_t ?? t)
+    dt = t - (last_t ?? (t - 16))
     last_t = t
     life += dt
     window.requestAnimationFrame(step)
@@ -279,7 +331,7 @@ const cos = (x: number) => Math.cos(x)
 const sqr = (x: number) => x < 0.5 ? 0 : 1
 const saw = (x: number) => x % 0.5
 
-const _mod_13 = (f: (x: number) => number) => (x: number) => f(x % 13 / 13)
+const _mod_13 = (f: (x: number) => number) => (x: number) => f(x % dt / dt)
 
 const e_lin = _mod_13((x: number) => x)
 const e_sin = _mod_13((x: number) => sin(x * pi2))
@@ -298,13 +350,71 @@ const _rnd_13 = <A>(f: (v: number) => A) => f(rnd19() % 13 / 13)
 
 const fls = <A>(h: A, l: A) => _rnd_13((v: number) => (life * 0.000003 % v) / (v * 1.2) < 0.5 ? h : l)
 
+
+const e_sex = _mod_13((x: number) => fls(x, x * 2) * 0.1 + e_sin(x) * 0.3 + 0.7 * e_sin(x * x * pi2 * pi2))
+
+const e_nine = _mod_13((x: number) => fls(x, x * 2) * 0.1 + e_sin(x) * 0.3 + 0.7 * e_sin(x * x * pi2 * pi2))
+
+
+const _one = () => {
+  let on = true
+  return (x: number) => {
+    if (x <= ) {
+      on = false
+    }
+
+    return on
+  }
+}
+
+const _cap1 = () => {
+  let capped = false
+  return (x: number) => {
+    if (x > 1 - epsi) {
+      capped = true
+    }
+
+    return (capped && 1) || x
+  }
+}
+
+const caps_1 = [...Array(20).keys()].map(_ => _cap1())
+
+const p_nt_lod = _one()
+
+const _tr = (dur: number = 1000) => {
+  let e = 0
+  return (b: number) => {
+    e += dt
+
+    let t = Math.min(1, e / dur)
+    return lerp(b, t)
+  }
+}
+
+
+const lerp = (b: number, t: number) => {
+  return b * t
+}
+
+
+const tr_ = _tr()
+
+let scn = 'ntr'
+
+
 function loop(m: Mm, g: Gg) {
+
+  let a = 38, a3 = a * 3, a8 = a * 8
+
 
   let u_angle = sin(life * 0.003) * h64p
   let u_s_f40 = sin(life * 0.02) * h64p
 
 
   /* Background */
+
+ g.if(true) /* bg always */
 
   g.fc(bgn)
   g.fr(0, 0, w, h)
@@ -328,6 +438,29 @@ function loop(m: Mm, g: Gg) {
   }
   g.ep()
 
+ g.if(scn == 'ntr' || scn == 'trs') /* intro */
+
+
+  let ld = e_lin(life * 0.007)
+    g.sc(bgn)
+    g.bp(2)
+    g.fc(l_bgn)
+  if (p_nt_lod(ld)) {
+    g.fr_c(hw, hh, 100 + ld * 1920, 30)
+  } else {
+    let ld_2 = caps_1[0](e_lin(life * 0.08))
+    g.fr_c(hw, hh, 100 + 1920, 20 + tr_(ld_2 * 100))
+  }
+    g.m2(hw, hh)
+    g.l2(hw + 100, hh)
+    g.ep()
+     
+
+ g.if(scn == 'trs') /* transition */
+
+
+
+ g.if(scn == 'ply') /* play */
 
   g.sc(_l_sat('#cdcddc'))
   g.bp(3)
@@ -335,6 +468,22 @@ function loop(m: Mm, g: Gg) {
     g.dot(100 + e_sqr(i + life * 0.003) * 100, 0 + e_lin(i) * 1080, 8)
   }
   g.ep()
+
+  g.sc(_l_sat('#cdcddc'))
+  g.bp(3)
+  for (let i = 1; i < 13; i++) {
+    g.dot(w - a8 - a3 + e_sex(i + life * 0.003) * 100, 0 + e_lin(i) * 1080, 8)
+  }
+  g.ep()
+
+  g.sc(_l_sat('#cdcddc'))
+  g.bp(3)
+  for (let i = 1; i < 13; i++) {
+    g.dot(hw - a3 + e_nine(- i + life * 0.003) * 100, 0 + e_lin(i) * 1080, 8)
+  }
+  g.ep()
+
+
 
 
   /* Foreground */
@@ -344,7 +493,6 @@ function loop(m: Mm, g: Gg) {
   g.sc(hi_lo_red)
   g.bp()
 
-  let a = 38, a3 = a * 3, a8 = a * 8
 
   g.m2(a, a)
   g.l2(w - a8, a)
@@ -403,7 +551,7 @@ function loop(m: Mm, g: Gg) {
 
 
 
-  g.sc(grn)
+  g.sc(l_grn)
   g.save()
   g.rotate(0, hw - a3, hh + a3)
   g.sr(513, 178)
@@ -412,7 +560,7 @@ function loop(m: Mm, g: Gg) {
 
   g.bp()
 
-  g.fc(grn)
+  g.fc(l_grn)
 
   g.str('5', hw - a3 * 3, hh + 30)
   g.clin(    hw - a3 * 3, hh + 30 + 150, 20)
@@ -424,8 +572,10 @@ function loop(m: Mm, g: Gg) {
   g.clin(    hw - a3 * 0, hh + 30 + 150, 20)
   g.str('5', hw - a3 * -1, hh + 30)
   g.clin(    hw - a3 * -1, hh + 30 + 150, 20)
-
   g.ep()
+
+
+  g.if(true) /* always */
 
   g.fc(m_blu)
   g.lrg()
