@@ -1,0 +1,16 @@
+{
+  "name": "belly-flop",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port=3000 --host",
+    "build": "tsc && vite build",
+    "lint": "tsc --noEmit --watch",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5"
+  }
+}
