@@ -1,3 +1,20 @@
+class Aa {
+  static init() {
+    let cx = new AudioContext()
+
+    let src = cx.createBufferSource()
+
+    let gain = cx.createGain()
+    gain.connect(src)
+
+    cx.destination.connect(gain)
+
+
+    return new Aa()
+  }
+
+}
+
 
 /* https://chat.openai.com/share/1fcd05cf-4e17-47ed-9143-8380d46b818b */
 // Create a Proxy around the Graphics instance
@@ -109,11 +126,11 @@ class Mm {
 
 class Gg {
   else() {
-    throw new Error("Method not implemented.");
+  //  throw new Error("Method not implemented.");
   }
 
-  if(scn1: boolean) {
-    throw new Error("Method not implemented.");
+  if(_scn1: boolean) {
+  //  throw new Error("Method not implemented.");
   }
 
   static init(e: HTMLElement): [Gg, HTMLCanvasElement] {
@@ -139,8 +156,11 @@ class Gg {
   fc(c: string) {
     this.cx.fillStyle = c
   }
+  sml2() {
+    this.cx.font = '72px Courier New'
+  }
   sml() {
-    this.cx.font = '100px Courier New'
+    this.cx.font = '96px Courier New'
   }
   lrg() {
     this.cx.font = '148px Courier New'
@@ -235,6 +255,8 @@ const lyllw = '#e3cd31'
 const yllw = '#dacf80'
 const grn = '#60e331'
 const blu = '#319ae3'
+const lght = '#d7d9db'
+const plp = '#942890'
 
 /* https://chat.openai.com/share/f4ff1e1b-f9e4-468f-8b7d-1c05ddd20dde */
 function adjustSaturation(originalColorHex: string, saturationChange: number) {
@@ -258,24 +280,27 @@ function adjustSaturation(originalColorHex: string, saturationChange: number) {
 const _sat = (c: string) => adjustSaturation(c, 0.8)
 const _l_sat = (c: string) => adjustSaturation(c, -0.8)
 
-const l_bgn = _l_sat('#1e1b22')
-const l_red = _l_sat('#5d1320')
-const l_prpl = _l_sat('#7431e3')
-const l_lprpl = _l_sat('#e331da')
-const l_lyllw = _l_sat('#e3cd31')
-const l_yllw = _l_sat('#dacf80')
-const l_grn = _l_sat('#60e331')
-const l_blu = _l_sat('#319ae3')
+const l_bgn = _l_sat(bgn)
+const l_red = _l_sat(red)
+const l_prpl = _l_sat(prpl)
+const l_lprpl = _l_sat(lprpl)
+const l_lyllw = _l_sat(lyllw)
+const l_yllw = _l_sat(yllw)
+const l_grn = _l_sat(grn)
+const l_blu = _l_sat(blu)
+const l_lght = _l_sat(lght)
+const l_plp = _l_sat(plp)
 
-const m_bgn = _sat('#1e1b22')
-const m_red = _sat('#5d1320')
-const m_prpl = _sat('#7431e3')
-const m_lprpl = _sat('#e331da')
-const m_lyllw = _sat('#e3cd31')
-const m_yllw = _sat('#dacf80')
-const m_grn = _sat('#60e331')
-const m_blu = _sat('#319ae3')
-
+const m_bgn = _sat(bgn)
+const m_red = _sat(red)
+const m_prpl = _sat(prpl)
+const m_lprpl = _sat(lprpl)
+const m_lyllw = _sat(lyllw)
+const m_yllw = _sat(yllw)
+const m_grn = _sat(grn)
+const m_blu = _sat(blu)
+const m_lght = _sat(lght)
+const m_plp = _sat(plp)
 
 
 
@@ -331,7 +356,7 @@ const cos = (x: number) => Math.cos(x)
 const sqr = (x: number) => x < 0.5 ? 0 : 1
 const saw = (x: number) => x % 0.5
 
-const _mod_13 = (f: (x: number) => number) => (x: number) => f(x % dt / dt)
+const _mod_13 = (f: (x: number) => number) => (x: number) => f(x % 13 / 13)
 
 const e_lin = _mod_13((x: number) => x)
 const e_sin = _mod_13((x: number) => sin(x * pi2))
@@ -359,7 +384,7 @@ const e_nine = _mod_13((x: number) => fls(x, x * 2) * 0.1 + e_sin(x) * 0.3 + 0.7
 const _one = () => {
   let on = true
   return (x: number) => {
-    if (x <= ) {
+    if (x <= epsi) {
       on = false
     }
 
@@ -400,7 +425,7 @@ const lerp = (b: number, t: number) => {
 
 const tr_ = _tr()
 
-let scn = 'ntr'
+let scn = 'ply'
 
 
 function loop(m: Mm, g: Gg) {
@@ -442,18 +467,14 @@ function loop(m: Mm, g: Gg) {
 
 
   let ld = e_lin(life * 0.007)
-    g.sc(bgn)
-    g.bp(2)
-    g.fc(l_bgn)
-  if (p_nt_lod(ld)) {
-    g.fr_c(hw, hh, 100 + ld * 1920, 30)
-  } else {
-    let ld_2 = caps_1[0](e_lin(life * 0.08))
-    g.fr_c(hw, hh, 100 + 1920, 20 + tr_(ld_2 * 100))
-  }
-    g.m2(hw, hh)
-    g.l2(hw + 100, hh)
-    g.ep()
+  console.log(ld)
+  g.sc(bgn)
+  g.bp(2)
+  g.fc(l_bgn)
+  g.fr_c(hw, hh, 100 + ld * 1920, 30)
+  g.m2(hw, hh)
+  g.l2(hw + 100, hh)
+  g.ep()
      
 
  g.if(scn == 'trs') /* transition */
@@ -508,7 +529,6 @@ function loop(m: Mm, g: Gg) {
   g.ep()
 
 
-
   let [btn_x, btn_y] = [hw - h2w - h4w, hh + 2 * h3h]
   let hovering2 = m.hovering(btn_x, btn_y, 360)
   let hovering = m.hovering(btn_x, btn_y, 120)
@@ -528,7 +548,7 @@ function loop(m: Mm, g: Gg) {
     g.fc(m_yllw)
     g.str('dice', 0, 0)
   } else {
-    g.str('dice', 0, 0)
+    g.str('dice', 0, -30)
   }
   g.rsto()
 
@@ -541,14 +561,11 @@ function loop(m: Mm, g: Gg) {
   g.rsto()
 
 
-
-
   g.fc(bgn)
   g.save()
   g.rotate(0, hw - a8 - a3, hh + a)
   g.fr(0, 0, 600, 100)
   g.rsto()
-
 
 
   g.sc(l_grn)
@@ -575,11 +592,83 @@ function loop(m: Mm, g: Gg) {
   g.ep()
 
 
+  g.sc(yllw)
+  g.bp()
+  g.dot(hw + a8 - a3, a3, 60)
+
+  g.m2(hw + a8 - a3, a3)
+
+  g.ep()
+
+
+  g.save()
+  g.bp()
+  g.sc(lght)
+  g.rotate(-hp * 0.5, a + 100, a)
+  g.m2(0, 0)
+  for (let i = 0; i < e_lin(life * 0.03) * 13; i++) {
+    g.l2(e_saw(i * 250) * 130, e_sin(i * 0.3) * 540)
+  }
+  g.ep()
+  g.rsto()
+
+
   g.if(true) /* always */
 
   g.fc(m_blu)
   g.lrg()
   g.str('belly basket', hw, 0)
+
+  let tm = 0.5
+  let lm = 1.2
+  let sp = 1.3
+
+  g.fc(blu)
+  g.sml()
+  g.str('wind', w - a3 * lm, a3 * sp - a3 * tm)
+  g.fc(l_prpl)
+  g.fr(w - a8 + 5, a3 * sp - a3 * tm - 20, a8 - 15, 5)
+  g.fr(w - a8 + 5, a3 * sp - a3 * tm + a3, a8 - 15, 5)
+
+  g.fr(w - a8 + 5 + a8 - 15, a3 * sp - a3 * tm - 20, 5, a3 * 8 - 32)
+
+
+  g.fc(yllw)
+  g.sml()
+  g.str('sun', w - a3 * lm, a3 * sp * 2 - a3 * tm)
+
+  g.fc(l_prpl)
+  g.fr(w - a8 + 5, a3 * sp * 2 - a3 * tm + a3, a8 - 15, 5)
+
+  g.fc(grn)
+  g.sml2()
+  g.str('plant', w - a3 * lm, a3 * sp * 3 - a3 * tm)
+
+
+  g.fc(l_prpl)
+  g.fr(w - a8 + 5, a3 * sp * 3 - a3 * tm + a3, a8 - 15, 5)
+
+  g.fc(plp)
+  g.sml()
+  g.str('seed', w - a3 * lm, a3 * sp * 4 - a3 * tm)
+
+
+  g.fc(l_prpl)
+  g.fr(w - a8 + 5, a3 * sp * 4 - a3 * tm + a3, a8 - 15, 5)
+
+  g.fc(prpl)
+  g.str('root', w - a3 * lm, a3 * sp * 5 - a3 * tm)
+
+
+  g.fc(l_prpl)
+  g.fr(w - a8 + 5, a3 * sp * 5 - a3 * tm + a3, a8 - 15, 5)
+
+  g.fc(lght)
+  g.str('ch4', w - a3 * lm, a3 * sp * 6 - a3 * tm)
+
+
+  g.fc(l_prpl)
+  g.fr(w - a8 + 5, a3 * sp * 6 - a3 * tm + a3, a8 - 15, 5)
 
 
   g.save()
