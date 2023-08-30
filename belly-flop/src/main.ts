@@ -1,17 +1,154 @@
+const m2f = (midi_note: number) => 440.0 * Math.pow(2, (midi_note - 69) / 12.0)
+
+const [C4, G4] = [60, 67]
+const [E4, B4] = [64, 71]
+const [D4, A4] = [62, 69]
+
+const A3 = 57
+const F3 = 53
+
+
 class Aa {
+
+  enable = false
+
   static init() {
     let cx = new AudioContext()
 
-    let src = cx.createBufferSource()
+    const sfx = () => {
+      let ct = cx.currentTime
+      let at = 0.1
+      let dcy = 0.15
+      let sus = 0.2
+      let rels = 0.25
+      let sst_lvl = 2
+      let dcy_lvl = 1.6
 
-    let gain = cx.createGain()
-    gain.connect(src)
+      let slp = 0.2
 
-    cx.destination.connect(gain)
+      let note = A4
+
+      let pttn = '12021'.split('')
+
+      let last_index = pttn.length - 1
+
+      let osc1 = cx.createOscillator()
+      osc1.type = 'sawtooth'
+      let osc2 = cx.createOscillator()
+      osc2.type = 'sawtooth'
+
+      osc1.frequency.setValueAtTime(m2f(note), ct)
+      osc2.frequency.setValueAtTime(m2f(note + 12), ct)
+      //osc1.detune.setValueAtTime(-0.3, ct)
+      //osc2.detune.setValueAtTime(0.3, ct)
 
 
-    return new Aa()
+      let lpf = cx.createBiquadFilter()
+      lpf.type = 'lowpass'
+
+      let hpf = cx.createBiquadFilter()
+      hpf.type = 'highpass'
+ 
+
+      //let panner = cx.createStereoPanner()
+      //panner.pan.setValueAtTime(0, ct)
+
+      let cmprsr = cx.createDynamicsCompressor()
+      cmprsr.threshold.setValueAtTime(0, ct)
+      cmprsr.ratio.setValueAtTime(6, ct)
+      cmprsr.attack.setValueAtTime(0.003, ct)
+      cmprsr.release.setValueAtTime(0.25, ct)
+
+
+      let gain1 = cx.createGain()
+      let gain2 = cx.createGain()
+
+      osc1.connect(gain1)
+      osc2.connect(gain2)
+
+      gain1.connect(lpf)
+      gain2.connect(lpf)
+
+      gain1.connect(hpf)
+      gain2.connect(hpf)
+
+      lpf.connect(cmprsr)
+      hpf.connect(cmprsr)
+
+      let gain = cx.createGain()
+      cmprsr.connect(gain)
+      gain.connect(cx.destination)
+
+      osc1.start()
+      osc2.start()
+
+
+      let arryhtm = 0.6
+
+      const loop = (et: number) => {
+        pttn.forEach((note, index) => {
+
+          let t = et + index * (at + dcy + rels + slp)
+
+          lpf.frequency.setValueAtTime(10, t)
+          lpf.frequency.exponentialRampToValueAtTime(130, t + dcy)
+ 
+          hpf.frequency.setValueAtTime(10, t)
+          hpf.frequency.exponentialRampToValueAtTime(130, t + dcy)
+
+          if (note === '1') {
+
+            gain2.gain.setValueAtTime(0, t)
+            gain1.gain.setValueAtTime(0, t)
+            gain1.gain.linearRampToValueAtTime(sst_lvl * 1.5, t + at)
+            gain1.gain.exponentialRampToValueAtTime(dcy_lvl, t + at + dcy)
+            gain1.gain.exponentialRampToValueAtTime(sst_lvl, t + at + dcy + sus)
+            gain1.gain.linearRampToValueAtTime(epsi, t + at + dcy + sus + rels)
+          } else if (note === '2') {
+            gain1.gain.setValueAtTime(0, t)
+            gain2.gain.setValueAtTime(0, t)
+            gain2.gain.linearRampToValueAtTime(sst_lvl * 1.5, t + at)
+            gain2.gain.exponentialRampToValueAtTime(dcy_lvl, t + at + dcy)
+            gain2.gain.exponentialRampToValueAtTime(sst_lvl, t + at + dcy + sus)
+            gain2.gain.linearRampToValueAtTime(epsi, t + at + dcy + sus + rels)
+          }
+        })
+
+        let n_et = et + (last_index + 1) * (at + dcy + rels + slp)
+
+        //let ct = cx.currentTime
+        //n_et -= (n_et - ct) * Math.sin((n_et - ct) * arryhtm) * 0.01
+
+        setTimeout(() => loop(n_et), 0)
+
+      }
+      loop(ct)
+
+      /*
+      setTimeout(() => {
+        osc1.stop()
+        osc2.stop()
+        gain.disconnect()
+      }, dur_sec * 1000)
+      */
+    }
+
+    let res = new Aa(sfx)
+
+    return res
   }
+
+  constructor(readonly sfx: () => void) {}
+
+
+  psfx() {
+    if (!this.enable) {
+      return
+    }
+
+    this.sfx()
+  }
+
 
 }
 
@@ -325,11 +462,12 @@ function app(e: HTMLElement) {
   let [_g, c] = Gg.init(e)
   let m = Mm.init(c)
   let g = _gProxy(_g)
+  let adio = Aa.init()
 
   let last_t: number | undefined;
   window.requestAnimationFrame(step)
   function step(t: number) {
-    loop(m, g)
+    loop(m, g, adio)
 
 
     dt = t - (last_t ?? (t - 16))
@@ -427,14 +565,35 @@ const tr_ = _tr()
 
 let scn = 'ply'
 
+let first_update = false
+let first_interaction = false
 
-function loop(m: Mm, g: Gg) {
+function loop(m: Mm, g: Gg, adio: Aa) {
 
   let a = 38, a3 = a * 3, a8 = a * 8
 
 
   let u_angle = sin(life * 0.003) * h64p
   let u_s_f40 = sin(life * 0.02) * h64p
+
+
+  if (!first_update) {
+    first_update = true
+
+
+
+
+
+  }
+
+  if (!first_interaction) {
+    if (m.down_p) {
+      first_interaction = true
+      adio.enable = true
+
+      adio.psfx()
+    }
+  }
 
 
   /* Background */
@@ -467,7 +626,6 @@ function loop(m: Mm, g: Gg) {
 
 
   let ld = e_lin(life * 0.007)
-  console.log(ld)
   g.sc(bgn)
   g.bp(2)
   g.fc(l_bgn)
