@@ -7,6 +7,10 @@ const [D4, A4] = [62, 69]
 const A3 = 57
 const F3 = 53
 
+let ntes = [A3, C4, G4, A3, E4, B4, A3, D4, D4, A4]
+let pttns = ['303', '101', '1212', '3232']
+
+let pttn = [...Array(300).keys()].flatMap(_ => pttns[_%pttns.length].split(''))
 
 class Aa {
 
@@ -15,33 +19,27 @@ class Aa {
   static init() {
     let cx = new AudioContext()
 
-    const sfx = () => {
+    const sfx = (n: number) => {
       let ct = cx.currentTime
-      let at = 0.1
-      let dcy = 0.15
-      let sus = 0.2
-      let rels = 0.25
-      let sst_lvl = 2
-      let dcy_lvl = 1.6
+      let at = 0.05
+      let dcy = 0.08
+      let sus = 0.02
+      let rels = 0.3
+      let sst_lvl = 0.8
+      let dcy_lvl = 0.5
+      let slp = 0
 
-      let slp = 0.2
+      ;[at, dcy, sus, rels] = [at, dcy, sus, rels].map(_ => _ / n)
+      rels = Math.max(rels, 0.1 - (at + dcy + sus))
 
-      let note = A4
-
-      let pttn = '12021'.split('')
-
-      let last_index = pttn.length - 1
-
+      
       let osc1 = cx.createOscillator()
       osc1.type = 'sawtooth'
       let osc2 = cx.createOscillator()
       osc2.type = 'sawtooth'
 
-      osc1.frequency.setValueAtTime(m2f(note), ct)
-      osc2.frequency.setValueAtTime(m2f(note + 12), ct)
-      //osc1.detune.setValueAtTime(-0.3, ct)
-      //osc2.detune.setValueAtTime(0.3, ct)
-
+      osc1.detune.setValueAtTime(-7, ct)
+      osc2.detune.setValueAtTime(+7, ct)
 
       let lpf = cx.createBiquadFilter()
       lpf.type = 'lowpass'
@@ -54,72 +52,106 @@ class Aa {
       //panner.pan.setValueAtTime(0, ct)
 
       let cmprsr = cx.createDynamicsCompressor()
-      cmprsr.threshold.setValueAtTime(0, ct)
-      cmprsr.ratio.setValueAtTime(6, ct)
-      cmprsr.attack.setValueAtTime(0.003, ct)
-      cmprsr.release.setValueAtTime(0.25, ct)
+      cmprsr.threshold.setValueAtTime(-30, ct)
+      cmprsr.ratio.setValueAtTime(2, ct)
+      cmprsr.attack.setValueAtTime(0.5, ct)
+      cmprsr.release.setValueAtTime(0.5, ct)
 
 
       let gain1 = cx.createGain()
       let gain2 = cx.createGain()
 
-      osc1.connect(gain1)
-      osc2.connect(gain2)
+      osc1.connect(lpf)
+      osc2.connect(hpf)
 
-      gain1.connect(lpf)
-      gain2.connect(lpf)
 
-      gain1.connect(hpf)
-      gain2.connect(hpf)
-
-      lpf.connect(cmprsr)
-      hpf.connect(cmprsr)
+      lpf.connect(gain1)
+      hpf.connect(gain2)
 
       let gain = cx.createGain()
-      cmprsr.connect(gain)
+
+      let cmprsr_enabled = true
+
+      if (cmprsr_enabled) {
+        gain1.connect(cmprsr)
+        gain2.connect(cmprsr)
+        cmprsr.connect(gain)
+      } else {
+        gain1.connect(gain)
+        gain2.connect(gain)
+      }
+
       gain.connect(cx.destination)
+
+      let lfo = cx.createOscillator()
+      lfo.type = 'square'
+      lfo.frequency.setValueAtTime(30, ct)
+
+      let lfo_gain = cx.createGain()
+      lfo_gain.gain.setValueAtTime(30, ct)
+      lfo.connect(lfo_gain)
+      lfo_gain.connect(lpf.frequency)
+
+      lfo.start()
 
       osc1.start()
       osc2.start()
 
-
-      let arryhtm = 0.6
-
       const loop = (et: number) => {
-        pttn.forEach((note, index) => {
 
-          let t = et + index * (at + dcy + rels + slp)
+        //let n_et = et + pttn.length * (at + dcy + sus + rels + slp)
+        //setTimeout(() => loop(n_et), (n_et - et) * 1000)
 
-          lpf.frequency.setValueAtTime(10, t)
-          lpf.frequency.exponentialRampToValueAtTime(130, t + dcy)
- 
-          hpf.frequency.setValueAtTime(10, t)
-          hpf.frequency.exponentialRampToValueAtTime(130, t + dcy)
 
-          if (note === '1') {
 
-            gain2.gain.setValueAtTime(0, t)
-            gain1.gain.setValueAtTime(0, t)
-            gain1.gain.linearRampToValueAtTime(sst_lvl * 1.5, t + at)
-            gain1.gain.exponentialRampToValueAtTime(dcy_lvl, t + at + dcy)
-            gain1.gain.exponentialRampToValueAtTime(sst_lvl, t + at + dcy + sus)
+
+        pttn.forEach((p, index) => {
+
+          let t = et + index * (at + dcy + sus + rels + slp)
+          
+          let note = ntes[index%ntes.length]
+
+          osc1.frequency.setValueAtTime(m2f(note), t)
+          osc2.frequency.setValueAtTime(m2f(note + 3), t)
+
+          lpf.Q.value = 2
+          lpf.frequency.setValueAtTime(240, t)
+          lpf.frequency.linearRampToValueAtTime(50, t + at)
+          lpf.frequency.linearRampToValueAtTime(440, t + at + dcy)
+          lpf.frequency.linearRampToValueAtTime(100, t + at + dcy + sus + rels)
+
+          hpf.Q.value = 2
+          hpf.frequency.setValueAtTime(100, t)
+          hpf.frequency.linearRampToValueAtTime(700, t + at)
+          hpf.frequency.linearRampToValueAtTime(5800, t + at + dcy + sus)
+          hpf.frequency.linearRampToValueAtTime(700, t + at + dcy + sus + rels)
+
+          gain1.gain.setValueAtTime(epsi, t)
+          gain2.gain.setValueAtTime(epsi, t)
+
+          if (p === '1' || p === '3') {
+            gain1.gain.linearRampToValueAtTime(sst_lvl + dcy_lvl, t + at)
+            gain1.gain.linearRampToValueAtTime(dcy_lvl, t + at + dcy)
+            if (sus > 0) {
+              gain1.gain.linearRampToValueAtTime(sst_lvl, t + at + dcy + sus)
+            }
             gain1.gain.linearRampToValueAtTime(epsi, t + at + dcy + sus + rels)
-          } else if (note === '2') {
-            gain1.gain.setValueAtTime(0, t)
-            gain2.gain.setValueAtTime(0, t)
-            gain2.gain.linearRampToValueAtTime(sst_lvl * 1.5, t + at)
+            if (slp > 0) {
+              gain1.gain.setValueAtTime(epsi, t + at + dcy + sus + rels + slp)
+            }
+          } 
+          if (p === '2' || p === '3') {
+            gain2.gain.linearRampToValueAtTime(sst_lvl + dcy_lvl, t + at)
             gain2.gain.exponentialRampToValueAtTime(dcy_lvl, t + at + dcy)
-            gain2.gain.exponentialRampToValueAtTime(sst_lvl, t + at + dcy + sus)
+            if (sus > 0) {
+              gain2.gain.exponentialRampToValueAtTime(sst_lvl, t + at + dcy + sus)
+            }
             gain2.gain.linearRampToValueAtTime(epsi, t + at + dcy + sus + rels)
+            if (slp > 0) {
+              gain2.gain.setValueAtTime(epsi, t + at + dcy + sus + rels + slp)
+            }
           }
         })
-
-        let n_et = et + (last_index + 1) * (at + dcy + rels + slp)
-
-        //let ct = cx.currentTime
-        //n_et -= (n_et - ct) * Math.sin((n_et - ct) * arryhtm) * 0.01
-
-        setTimeout(() => loop(n_et), 0)
 
       }
       loop(ct)
@@ -133,22 +165,31 @@ class Aa {
       */
     }
 
-    let res = new Aa(sfx)
+    let res = new Aa(() => sfx(2), () => sfx(2))
 
     return res
   }
 
-  constructor(readonly sfx: () => void) {}
+  constructor(
+    readonly sfx2: () => void,
+    readonly sfx3: () => void) {}
 
 
-  psfx() {
+  psfx2() {
     if (!this.enable) {
       return
     }
 
-    this.sfx()
+    this.sfx2()
   }
 
+  psfx3() {
+    if (!this.enable) {
+      return
+    }
+
+    //this.sfx3()
+  }
 
 }
 
@@ -587,11 +628,13 @@ function loop(m: Mm, g: Gg, adio: Aa) {
   }
 
   if (!first_interaction) {
+    adio.psfx2()
     if (m.down_p) {
       first_interaction = true
       adio.enable = true
 
-      adio.psfx()
+      adio.psfx2()
+      adio.psfx3()
     }
   }
 
