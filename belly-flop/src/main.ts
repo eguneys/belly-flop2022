@@ -628,7 +628,11 @@ function loop(m: Mm, g: Gg, adio: Aa) {
   }
 
   if (!first_interaction) {
+<<<<<<< HEAD
     adio.psfx2()
+=======
+    adio.psfx()
+>>>>>>> refs/remotes/origin/main
     if (m.down_p) {
       first_interaction = true
       adio.enable = true
