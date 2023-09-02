@@ -504,11 +504,12 @@ function app(e: HTMLElement) {
   let m = Mm.init(c)
   let g = _gProxy(_g)
   let adio = Aa.init()
+  let ss = Ss.init()
 
   let last_t: number | undefined;
   window.requestAnimationFrame(step)
   function step(t: number) {
-    loop(m, g, adio)
+    loop(m, g, adio, ss)
 
 
     dt = t - (last_t ?? (t - 16))
@@ -609,7 +610,7 @@ let scn = 'ply'
 let first_update = false
 let first_interaction = false
 
-function loop(m: Mm, g: Gg, adio: Aa) {
+function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
   let a = 38, a3 = a * 3, a8 = a * 8
 
@@ -621,26 +622,27 @@ function loop(m: Mm, g: Gg, adio: Aa) {
   if (!first_update) {
     first_update = true
 
-
-
-
-
   }
 
   if (!first_interaction) {
-<<<<<<< HEAD
-    adio.psfx2()
-=======
-    adio.psfx()
->>>>>>> refs/remotes/origin/main
     if (m.down_p) {
       first_interaction = true
       adio.enable = true
 
-      adio.psfx2()
-      adio.psfx3()
+      //adio.psfx2()
+      //adio.psfx3()
     }
   }
+
+
+  if (Math.abs(e_saw(life) - e_sex(u_angle)) < e_saw(life)) {
+    if (ss.ps.length > e_sin(u_angle * 50) * 10) {
+      ss.ps.splice(0, 2)
+    }
+    ss.ps.push([pi, a8 * 2 + e_sex(life) * hw, e_sin(life) * hh])
+    ss.ps.push([hhp, a8 * 2 + e_sex(life) * hw, e_cos(life) * hh])
+  }
+
 
 
   /* Background */
@@ -780,30 +782,59 @@ function loop(m: Mm, g: Gg, adio: Aa) {
   g.rsto()
 
 
-  g.bp()
-
-  g.fc(l_grn)
-
-  g.str('5', hw - a3 * 3, hh + 30)
-  g.clin(    hw - a3 * 3, hh + 30 + 150, 20)
-  g.str('5', hw - a3 * 2, hh + 30)
-  g.clin(    hw - a3 * 2, hh + 30 + 150, 20)
-  g.str('5', hw - a3 * 1, hh + 30)
-  g.clin(    hw - a3 * 1, hh + 30 + 150, 20)
-  g.str('5', hw - a3 * 0, hh + 30)
-  g.clin(    hw - a3 * 0, hh + 30 + 150, 20)
-  g.str('5', hw - a3 * -1, hh + 30)
-  g.clin(    hw - a3 * -1, hh + 30 + 150, 20)
-  g.ep()
-
+  for (let i = 0; i < ss.hnd.length; i++) {
+    g.bp()
+    g.fc(ss.mdl[i] === 1 ? m_grn : l_grn)
+    g.sc(ss.mdl[i] === 1 ? m_grn : l_grn)
+    g.str(`${ss.hnd[i]}`, hw - a3 * (3 - i), hh + 30)
+    g.clin(    hw - a3 * (3 - i), hh + 30 + 150, 20)
+    g.ep()
+  }
 
   g.sc(yllw)
   g.bp()
   g.dot(hw + a8 - a3, a3, 60)
-
   g.m2(hw + a8 - a3, a3)
-
   g.ep()
+
+
+  for (let i = 0; i < ss.ps.length; i++) {
+    let [r, px, py] = ss.ps[i]
+
+    g.save()
+    g.rotate(r + -u_angle * 20 * 0.25, a + 100 + px, a + py)
+
+    g.sc(grn)
+    g.bp()
+    for (let i = 0; i < 10; i++) {
+      let angl = (i / 10) * pi2
+      let dr = 6 + Math.sin(angl * 0.1 + u_angle) * (100 + u_angle)
+      let ix = 0 + dr * Math.cos(angl)
+      let iy = 0 + dr * Math.sin(angl)
+      if (i == 0) {
+        g.m2(ix, iy)
+      } else {
+        g.l2(ix, iy)
+      }
+    }
+    g.ep()
+
+    g.sc(prpl)
+
+    g.bp()
+    g.m2(0, 0)
+    g.l2(0, 130)
+    g.ep()
+
+
+    g.sc(lprpl)
+    g.bp()
+    g.dot(0, 130, 13)
+    g.ep()
+
+    g.rsto()
+
+  }
 
 
   g.save()
@@ -893,7 +924,6 @@ function loop(m: Mm, g: Gg, adio: Aa) {
 }
 
 
-app(document.getElementById('app')!)
 
 
 function calc_dist(x: number, y: number, x2: number, y2: number) {
@@ -905,3 +935,31 @@ function calc_dist(x: number, y: number, x2: number, y2: number) {
 
 const sml_distance = 100
 const lrg_distance = 300
+
+
+
+class Ss {
+
+
+  ps!: [number, number, number][]
+
+  hnd!: [number, number, number, number, number]
+  mdl!: [number, number, number, number, number]
+
+
+  static init(): Ss {
+    let res = new Ss()
+
+    res.ps = [[0, 50, 130], [pi, 300, 300]]
+
+    res.hnd = [5, 4, 3, 2, 1]
+
+    res.mdl = [0, 1, 1, 1, 0]
+
+    return res
+  }
+}
+
+
+
+app(document.getElementById('app')!)
