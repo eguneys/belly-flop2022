@@ -947,7 +947,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   x_hh += e_sex((-life * 0.02 + u_angle + x_hh % h3p) * 0.1) * a3
 
   x_hw = Math.min(Math.max(a3, x_hw), w - a8)
-  x_hh = Math.min(Math.max(a3, x_hh), h - a8)
+  x_hh = Math.min(Math.max(a3t, x_hh), h - a8)
 
   g.save()
   g.sc(blu)
