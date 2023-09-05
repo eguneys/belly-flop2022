@@ -939,10 +939,20 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   g.fr(w - a8 + 5, a3 * sp * 6 - a3 * tm + a3, a8 - 15, 5)
 
 
+
+  let x_hw = m.move_p?.[0] ?? 0
+  let x_hh = m.move_p?.[1] ?? 0
+
+  x_hw += e_sin((life * 0.08 + u_angle + x_hw % h3p) * 0.1) * a3
+  x_hh += e_sex((-life * 0.02 + u_angle + x_hh % h3p) * 0.1) * a3
+
+  x_hw = Math.min(Math.max(a3, x_hw), w - a8)
+  x_hh = Math.min(Math.max(a3, x_hh), h - a8)
+
   g.save()
-  g.sc(red)
+  g.sc(blu)
   g.bp()
-  g.rotate(u_angle * pi, hw, hh)
+  g.rotate(u_angle * pi, x_hw, x_hh)
   for (let i = 0; i < 5; i++) {
     g.rotate(u_angle * i * pi * 2, 0, 0)
     g.m2(0, 0)
