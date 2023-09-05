@@ -617,6 +617,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
   let u_angle = sin(life * 0.003) * h64p
   let u_s_f40 = sin(life * 0.02) * h64p
+  let w_angle = sin(life * 0.003) * hp
 
 
   if (!first_update) {
@@ -642,6 +643,25 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
     ss.ps.push([pi, a8 * 2 + e_sex(life) * hw, e_sin(life) * hh])
     ss.ps.push([hhp, a8 * 2 + e_sex(life) * hw, e_cos(life) * hh])
   }
+
+  if (Math.abs(e_sin(life * 0.02) + e_sin(life * 0.01)) < 10 * Math.sin(u_angle) ) {
+    let i = ss.mdl.findIndex(_ => e_lin(life * 100) < 0.1 && _ === 0)
+    if (i !== -1) {
+      ss.mdl[i] = (Math.floor(Math.abs(e_sin(life * 0.3)) * 7) % 3) + 2
+    }
+    ss.mdl.reverse()
+  }
+
+  if (e_sin(life * 0.02) + e_sin(life * 0.01) < 0.05) {
+    let r = ss.mdl.findIndex(_ => _ === 1)
+    let i = ss.mdl.findIndex(_ => e_lin(life * 7) < 0.1 && _ > 1)
+    if (i !== -1) {
+      ss.mdl[r] = 0
+      ss.mdl[i] = 1
+    }
+  }
+
+
 
 
 
@@ -783,12 +803,24 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
 
   for (let i = 0; i < ss.hnd.length; i++) {
-    g.bp()
-    g.fc(ss.mdl[i] === 1 ? m_grn : l_grn)
-    g.sc(ss.mdl[i] === 1 ? m_grn : l_grn)
-    g.str(`${ss.hnd[i]}`, hw - a3 * (3 - i), hh + 30)
-    g.clin(    hw - a3 * (3 - i), hh + 30 + 150, 20)
-    g.ep()
+    g.if(ss.mdl[i] === 1)
+      g.bp()
+      g.fc(m_grn)
+      g.sc(m_grn)
+      g.str(`${ss.hnd[i]}`, hw - a3 * (3 - i), hh + 30)
+      g.clin(    hw - a3 * (3 - i), hh + 30 + 150, 20)
+      g.ep()
+    g.if(ss.mdl[i] == 0)
+      g.bp()
+      g.fc(l_grn)
+      g.sc(e_nine(life) < 0.8 ? l_grn : yllw)
+      g.str(`${ss.hnd[i]}`, hw - a3 * (3 - i), hh + 30 + e_saw(life) * Math.abs(20 * e_sex(w_angle))* Math.abs(e_sin(w_angle)) * 50)
+      g.clin(    hw - a3 * (3 - i), hh + 30 + 150, 20)
+      g.ep()
+    g.if(ss.mdl[i] > 1)
+      g.fc(red)
+      g.sc(red)
+      g.str(`${ss.mdl[i]}`, hw - a3 * (3 - i), hh + 30 + e_saw(life) * Math.abs(20 * e_sex(w_angle))* Math.abs(e_sin(w_angle)) * 50)
   }
 
   g.sc(yllw)
@@ -945,7 +977,6 @@ class Ss {
 
   hnd!: [number, number, number, number, number]
   mdl!: [number, number, number, number, number]
-
 
   static init(): Ss {
     let res = new Ss()
