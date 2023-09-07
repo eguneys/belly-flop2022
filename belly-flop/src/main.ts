@@ -559,7 +559,44 @@ const fls = <A>(h: A, l: A) => _rnd_13((v: number) => (life * 0.000003 % v) / (v
 const e_sex = _mod_13((x: number) => fls(x, x * 2) * 0.1 + e_sin(x) * 0.3 + 0.7 * e_sin(x * x * pi2 * pi2))
 
 const e_nine = _mod_13((x: number) => fls(x, x * 2) * 0.1 + e_sin(x) * 0.3 + 0.7 * e_sin(x * x * pi2 * pi2))
+const e_brz = _mod_13((x: number) => _rnd_13((v: number) => 
+Math.abs(
+  sin(cos(x * 0.2) * 20 % 13 + 
+  sin(v * 0.002) * 13 % 7))))
 
+const e = 2.718281
+
+type PpC = {
+  A: number,
+  ω: number,
+  φ: number,
+  B: number,
+  C: number,
+  R: number
+}
+
+/* https://chat.openai.com/share/6df1d294-cc36-4d67-a20f-07ad49593226 */
+class Pp {
+
+  pp: number = 0
+
+  constructor(public cfg: PpC) {}
+
+  P = (t: number) => {
+    let { A, ω, φ, B, C, R } = this.cfg
+
+    return A * cos(ω*t + φ) + B * t + C * e^(R*t)
+  }
+}
+
+const PpP = new Pp({
+  A: epsi,
+  ω: pi,
+  φ: 0,
+  B: epsi,
+  C: 3,
+  R: epsi * 10,
+})
 
 const _one = () => {
   let on = true
@@ -602,6 +639,21 @@ const lerp = (b: number, t: number) => {
   return b * t
 }
 
+const _capa = (f: number) => {
+  let t = 0;
+
+  return (v: boolean) => {
+    if (v) {
+      t = f
+    } else {
+      t = Math.max(0, t)
+    }
+    return t > 0
+  }
+}
+
+const s_capa = _capa(13)
+
 
 const tr_ = _tr()
 
@@ -630,18 +682,34 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
       first_interaction = true
       adio.enable = true
 
-      //adio.psfx2()
+      // adio.psfx2()
       //adio.psfx3()
     }
   }
 
 
-  if (Math.abs(e_saw(life) - e_sex(u_angle)) < e_saw(life)) {
-    if (ss.ps.length > e_sin(u_angle * 50) * 10) {
-      ss.ps.splice(0, 2)
+  let ppp = PpP.P(life + 1000)
+
+  PpP.pp = PpP.P(life)
+
+  let strc = Math.abs(ppp - PpP.pp) > 8
+
+  let c_strc = s_capa(strc)
+
+  if (ss.ps.length > PpP.pp) {
+    if (ss.idps.length > 0) {
+      ss.ps.splice(ss.idps.pop()!, 1)
     }
-    ss.ps.push([pi, a8 * 2 + e_sex(life) * hw, e_sin(life) * hh])
-    ss.ps.push([hhp, a8 * 2 + e_sex(life) * hw, e_cos(life) * hh])
+  }
+
+  if (ss.ps.length < PpP.pp) {
+    ss.ps.push([0, a8 * 2 + e_sex(life) * hw, a8 + a3 * 2 + e_sin(life * 0.02) * 100])
+  }
+
+  if (ss.idps.length < PpP.pp / 2) {
+    if (ss.ps.length > 0) {
+      ss.idps.push(Math.floor(e_sex(life * 0.2) * ss.ps.length))
+    }
   }
 
   if (Math.abs(e_sin(life * 0.02) + e_sin(life * 0.01)) < 10 * Math.sin(u_angle) ) {
@@ -671,6 +739,31 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
   g.fc(bgn)
   g.fr(0, 0, w, h)
+
+
+  g.sc(yllw)
+  g.bp()
+  g.dot(hw + a8 - a3, a3, 60)
+  g.m2(hw + a8 - a3, a3)
+  g.ep()
+
+  for (let j = 0; j < 10; j++) {
+    g.if(e_sin(j * life) * 0.002 < j * 0.002)
+    g.save()
+    g.bp()
+    g.sc(m_lyllw)
+    g.rotate(-hp * 0.5 + j * 100, hw + a8 - a3, a3)
+    g.m2(0, 0)
+    for (let i = 0; i < e_lin(life * 0.008) * 13; i++) {
+      g.l2(sin(life * 0.002 + (i / 13) * pi2) * sin(life * 0.002 + (i / 13) * pi) * 50 - j * 2,
+       lin((i / 13) * pi) * 100 + ((8 - j) * 20))
+    }
+    g.ep()
+    g.rsto()
+  }
+
+
+
 
   let r = 40
 
@@ -822,21 +915,25 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
       g.sc(red)
       g.str(`${ss.mdl[i]}`, hw - a3 * (3 - i), hh + 30 + e_saw(life) * Math.abs(20 * e_sex(w_angle))* Math.abs(e_sin(w_angle)) * 50)
   }
+  g.if(true)
 
-  g.sc(yllw)
-  g.bp()
-  g.dot(hw + a8 - a3, a3, 60)
-  g.m2(hw + a8 - a3, a3)
-  g.ep()
-
-
+  /* plants */
   for (let i = 0; i < ss.ps.length; i++) {
     let [r, px, py] = ss.ps[i]
 
-    g.save()
-    g.rotate(r + -u_angle * 20 * 0.25, a + 100 + px, a + py)
+    let [c1, c2, c3] = [grn, prpl, lprpl]
 
-    g.sc(grn)
+    if (ss.idps.includes(i)) {
+      r += e_sin(u_angle + life * 0.002)
+      c1 = l_grn
+      c2 = lprpl
+      c3 = l_lprpl
+    }
+
+    g.save()
+    g.rotate(r + pi + -u_angle * 20 * 0.25, a + 100 + px, a + py)
+
+    g.sc(c1)
     g.bp()
     for (let i = 0; i < 10; i++) {
       let angl = (i / 10) * pi2
@@ -851,7 +948,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
     }
     g.ep()
 
-    g.sc(prpl)
+    g.sc(c2)
 
     g.bp()
     g.m2(0, 0)
@@ -859,7 +956,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
     g.ep()
 
 
-    g.sc(lprpl)
+    g.sc(c3)
     g.bp()
     g.dot(0, 130, 13)
     g.ep()
@@ -869,13 +966,15 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   }
 
 
+  /* light */
+  g.if(c_strc)
   g.save()
   g.bp()
   g.sc(lght)
   g.rotate(-hp * 0.5, a + 100, a)
   g.m2(0, 0)
-  for (let i = 0; i < e_lin(life * 0.03) * 13; i++) {
-    g.l2(e_saw(i * 250) * 130, e_sin(i * 0.3) * 540)
+  for (let i = 0; i < Math.min(10, -e_nine(life * 0.008) * 8 + e_sin(life * 0.003) * 15); i++) {
+    g.l2(e_saw(i * 250) * 130 + e_nine((i/13) * 200 + life * 0.0001) * 10, e_sin(i * 0.3) * 540)
   }
   g.ep()
   g.rsto()
@@ -986,6 +1085,7 @@ const lrg_distance = 300
 class Ss {
 
 
+  idps!: number[]
   ps!: [number, number, number][]
 
   hnd!: [number, number, number, number, number]
@@ -999,6 +1099,8 @@ class Ss {
     res.hnd = [5, 4, 3, 2, 1]
 
     res.mdl = [0, 1, 1, 1, 0]
+
+    res.idps = []
 
     return res
   }
