@@ -943,11 +943,14 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   let x_hw = m.move_p?.[0] ?? 0
   let x_hh = m.move_p?.[1] ?? 0
 
-  x_hw += e_sin((life * 0.08 + u_angle + x_hw % h3p) * 0.1) * a3
-  x_hh += e_sex((-life * 0.02 + u_angle + x_hh % h3p) * 0.1) * a3
+  x_hw += e_sin(life * 0.017 + x_hw * 0.02) * a
+  x_hh += e_cos(life * 0.014 + x_hh * 0.02) * a
+
+  x_hw += e_sin((e_sin(life) * 0.008 + u_angle + x_hw % h3p) * 0.1) * a3
+  x_hh += e_sex((-e_sex(life) * 0.0002 + u_angle + x_hh % h3p) * 0.1) * a3
 
   x_hw = Math.min(Math.max(a3, x_hw), w - a8)
-  x_hh = Math.min(Math.max(a3t, x_hh), h - a8)
+  x_hh = Math.min(Math.max(a3, x_hh), h - a8)
 
   g.save()
   g.sc(blu)
