@@ -1,5 +1,7 @@
 const m2f = (midi_note: number) => 440.0 * Math.pow(2, (midi_note - 69) / 12.0)
 
+const C1 = 24
+
 const [C4, G4] = [60, 67]
 const [E4, B4] = [64, 71]
 const [D4, A4] = [62, 69]
@@ -7,8 +9,10 @@ const [D4, A4] = [62, 69]
 const A3 = 57
 const F3 = 53
 
-let ntes = [A3, C4, G4, A3, E4, B4, A3, D4, D4, A4]
-let pttns = ['303', '101', '1212', '3232']
+const ctve_down = 0.7
+
+let ntes = [C4, G4, A4, E4, C4, F3, E4].map(_ => _ - 12 * ctve_down)
+let pttns = ['333333', '21221', '1111', '2221', '33333']
 
 let pttn = [...Array(300).keys()].flatMap(_ => pttns[_%pttns.length].split(''))
 
@@ -19,27 +23,71 @@ class Aa {
   static init() {
     let cx = new AudioContext()
 
-    const sfx = (n: number) => {
-      let ct = cx.currentTime
-      let at = 0.05
-      let dcy = 0.08
-      let sus = 0.02
-      let rels = 0.3
-      let sst_lvl = 0.8
-      let dcy_lvl = 0.5
-      let slp = 0
+    const pulse = () => {
 
+      const sqr_curve = new Float32Array(256)
+      sqr_curve.fill(-1, 0, 128)
+      sqr_curve.fill(1, 128, 256)
+
+      const _cnst_curve = (value: number) => {
+        let crve = new Float32Array(2)
+        crve[0] = value
+        crve[1] = value
+        return crve
+      }
+
+
+      let tri = cx.createOscillator()
+      tri.type = 'sawtooth'
+
+      let sqr_shaper = cx.createWaveShaper()
+      sqr_shaper.curve = sqr_curve
+
+      let cnst_shaper = cx.createWaveShaper()
+      cnst_shaper.curve = _cnst_curve(0.5)
+
+      let wdth_param = cx.createGain()
+
+      let gain = cx.createGain()
+
+
+      tri.connect(cnst_shaper)
+      cnst_shaper.connect(wdth_param)
+      wdth_param.connect(sqr_shaper)
+      tri.connect(sqr_shaper)
+      sqr_shaper.connect(gain)
+
+      //gain.connect(cx.destination)
+
+      return {
+        gain: gain,
+        width: wdth_param.gain,
+        osc: tri
+      }
+    }
+
+
+
+    const sfx = () => {
+      let ct = cx.currentTime
+      let at = 0.06
+      let dcy = 0.2
+      let sus = 0.01
+      let rels = 0.2
+      let sst_lvl = 0.2
+      let dcy_lvl = 0.18
+      let slp = 0.2
+
+      let n = 4
       ;[at, dcy, sus, rels] = [at, dcy, sus, rels].map(_ => _ / n)
-      rels = Math.max(rels, 0.1 - (at + dcy + sus))
+      rels = Math.max(rels, 0.03 - (at + dcy + sus))
 
       
-      let osc1 = cx.createOscillator()
-      osc1.type = 'sawtooth'
-      let osc2 = cx.createOscillator()
-      osc2.type = 'sawtooth'
+      let osc1 = pulse()
+      let osc2 = pulse()
 
-      osc1.detune.setValueAtTime(-7, ct)
-      osc2.detune.setValueAtTime(+7, ct)
+      osc1.osc.detune.setValueAtTime(-0.7, ct)
+      osc2.osc.detune.setValueAtTime(+1, ct)
 
       let lpf = cx.createBiquadFilter()
       lpf.type = 'lowpass'
@@ -61,8 +109,8 @@ class Aa {
       let gain1 = cx.createGain()
       let gain2 = cx.createGain()
 
-      osc1.connect(lpf)
-      osc2.connect(hpf)
+      osc1.gain.connect(lpf)
+      osc2.gain.connect(hpf)
 
 
       lpf.connect(gain1)
@@ -84,18 +132,30 @@ class Aa {
       gain.connect(cx.destination)
 
       let lfo = cx.createOscillator()
-      lfo.type = 'square'
-      lfo.frequency.setValueAtTime(30, ct)
+      lfo.type = 'sine'
+      lfo.frequency.setValueAtTime(7, ct)
 
       let lfo_gain = cx.createGain()
-      lfo_gain.gain.setValueAtTime(30, ct)
+      lfo_gain.gain.setValueAtTime(0.8, ct)
       lfo.connect(lfo_gain)
-      lfo_gain.connect(lpf.frequency)
+      //lfo_gain.connect(lpf.frequency)
+      lfo_gain.connect(osc1.width)
+      lfo_gain.connect(osc2.width)
 
+      let lfo2 = pulse()
+      lfo2.osc.frequency.setValueAtTime(m2f(E4), ct)
+      lfo2.width.setValueAtTime(0.25, ct)
+      let lfo2_gain = cx.createGain()
+      lfo2_gain.gain.setValueAtTime(1, ct)
+      lfo2.osc.connect(lfo2_gain)
+
+      lfo2_gain.connect(gain.gain)
+
+      lfo2.osc.start()
       lfo.start()
 
-      osc1.start()
-      osc2.start()
+      osc1.osc.start()
+      osc2.osc.start()
 
       const loop = (et: number) => {
 
@@ -111,20 +171,27 @@ class Aa {
           
           let note = ntes[index%ntes.length]
 
-          osc1.frequency.setValueAtTime(m2f(note), t)
-          osc2.frequency.setValueAtTime(m2f(note + 3), t)
+          osc1.osc.frequency.setValueAtTime(m2f(note), t)
+          osc2.osc.frequency.setValueAtTime(m2f(note + 3), t)
+
+          osc1.width.setValueAtTime(0.05, t)
+          osc2.width.setValueAtTime(0.05, t)
+          osc1.width.linearRampToValueAtTime(0.5, t + at)
+          osc2.width.linearRampToValueAtTime(0.5, t + at)
+          osc1.width.linearRampToValueAtTime(0.2, t + at + dcy + sus)
+          osc2.width.linearRampToValueAtTime(0.2, t + at + dcy + sus)
 
           lpf.Q.value = 2
-          lpf.frequency.setValueAtTime(240, t)
-          lpf.frequency.linearRampToValueAtTime(50, t + at)
-          lpf.frequency.linearRampToValueAtTime(440, t + at + dcy)
-          lpf.frequency.linearRampToValueAtTime(100, t + at + dcy + sus + rels)
+          lpf.frequency.setValueAtTime(1400, t)
+          lpf.frequency.linearRampToValueAtTime(500, t + at)
+          lpf.frequency.linearRampToValueAtTime(2400, t + at + dcy)
+          lpf.frequency.linearRampToValueAtTime(1000, t + at + dcy + sus + rels)
 
-          hpf.Q.value = 2
+          hpf.Q.value = 1
           hpf.frequency.setValueAtTime(100, t)
-          hpf.frequency.linearRampToValueAtTime(700, t + at)
-          hpf.frequency.linearRampToValueAtTime(5800, t + at + dcy + sus)
-          hpf.frequency.linearRampToValueAtTime(700, t + at + dcy + sus + rels)
+          hpf.frequency.linearRampToValueAtTime(300, t + at)
+          hpf.frequency.linearRampToValueAtTime(800, t + at + dcy + sus)
+          hpf.frequency.linearRampToValueAtTime(100, t + at + dcy + sus + rels)
 
           gain1.gain.setValueAtTime(epsi, t)
           gain2.gain.setValueAtTime(epsi, t)
@@ -165,7 +232,9 @@ class Aa {
       */
     }
 
-    let res = new Aa(() => sfx(2), () => sfx(2))
+    let res = new Aa(
+      () => sfx(1), 
+      () => sfx(2))
 
     return res
   }
@@ -682,7 +751,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
       first_interaction = true
       adio.enable = true
 
-      // adio.psfx2()
+      adio.psfx2()
       //adio.psfx3()
     }
   }
