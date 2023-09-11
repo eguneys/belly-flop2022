@@ -66,7 +66,59 @@ class Aa {
       }
     }
 
+    const sigm = (z) => 1 / (1 + Math.exp(-z))
 
+    const ch4 = () => {
+
+      const n_curve = new Float32Array(256)
+      for (let i = 0; i < 256; i++) {
+        let v = Math.random() * i/256 + sigm(Math.random() * i * 256 + Math.sin(i / 256 * pi))
+        n_curve.fill(v, i, i + 2)
+      }
+
+
+
+      let osc = cx.createOscillator()
+
+      let n_shaper = cx.createWaveShaper()
+      n_shaper.curve = n_curve
+
+      let gain = cx.createGain()
+      osc.connect(n_shaper)
+      n_shaper.connect(gain)
+      gain.connect(cx.destination)
+
+      let ct = cx.currentTime
+      let lfo2 = cx.createOscillator()
+      let lfo = cx.createOscillator()
+      let lfo_gain = cx.createGain()
+
+      lfo.connect(lfo_gain)
+      lfo2.connect(lfo_gain)
+      lfo_gain.connect(gain.gain)
+
+
+      lfo2.start()
+      lfo.start()
+      osc.start()
+
+
+      gain.gain.setValueAtTime(0.5, ct)
+      lfo_gain.gain.setValueAtTime(1, ct)
+      lfo.frequency.setValueAtTime(128, ct)
+      lfo2.frequency.setValueAtTime(2, ct)
+      lfo.frequency.linearRampToValueAtTime(0, ct + 1.2)
+      lfo2.frequency.linearRampToValueAtTime(0, ct + 1.8)
+      gain.gain.linearRampToValueAtTime(1, ct + 2.0)
+      gain.gain.linearRampToValueAtTime(0, ct + 2.4)
+
+      setTimeout(() => {
+        osc.stop()
+        lfo.stop()
+        lfo2.stop()
+        gain.disconnect()
+      }, 2800)
+    }
 
     const sfx = () => {
       let ct = cx.currentTime
@@ -86,7 +138,7 @@ class Aa {
       let osc1 = pulse()
       let osc2 = pulse()
 
-      osc1.osc.detune.setValueAtTime(-0.7, ct)
+      osc1.osc.detune.setValueAtTime(0.4, ct)
       osc2.osc.detune.setValueAtTime(+1, ct)
 
       let lpf = cx.createBiquadFilter()
@@ -233,8 +285,8 @@ class Aa {
     }
 
     let res = new Aa(
-      () => sfx(1), 
-      () => sfx(2))
+      () => sfx(), 
+      () => ch4())
 
     return res
   }
@@ -257,7 +309,7 @@ class Aa {
       return
     }
 
-    //this.sfx3()
+    this.sfx3()
   }
 
 }
@@ -713,15 +765,16 @@ const _capa = (f: number) => {
 
   return (v: boolean) => {
     if (v) {
-      t = f
+      t = t == 0 ? f : t
     } else {
-      t = Math.max(0, t)
+      t = Math.max(0, t-1)
     }
     return t > 0
   }
 }
 
-const s_capa = _capa(13)
+const s_capa = _capa(13 * 16)
+const o_capa = _capa(1)
 
 
 const tr_ = _tr()
@@ -751,19 +804,24 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
       first_interaction = true
       adio.enable = true
 
-      adio.psfx2()
-      //adio.psfx3()
+      //adio.psfx2()
+      adio.psfx3()
     }
   }
 
 
-  let ppp = PpP.P(life + 1000)
+  let ppp = PpP.P(life + 10)
 
   PpP.pp = PpP.P(life)
 
-  let strc = Math.abs(ppp - PpP.pp) > 8
+  let strc = Math.abs(ppp - PpP.pp) > 6
 
   let c_strc = s_capa(strc)
+  let o_strc = o_capa(strc)
+
+  if (o_strc) {
+    adio.psfx3()
+  }
 
   if (ss.ps.length > PpP.pp) {
     if (ss.idps.length > 0) {
@@ -1042,7 +1100,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   g.sc(lght)
   g.rotate(-hp * 0.5, a + 100, a)
   g.m2(0, 0)
-  for (let i = 0; i < Math.min(10, -e_nine(life * 0.008) * 8 + e_sin(life * 0.003) * 15); i++) {
+  for (let i = 0; i < - Math.min(10, -e_nine(life * 0.008) * 8 - Math.abs(e_sin(life * 0.003) * 7)); i++) {
     g.l2(e_saw(i * 250) * 130 + e_nine((i/13) * 200 + life * 0.0001) * 10, e_sin(i * 0.3) * 540)
   }
   g.ep()
