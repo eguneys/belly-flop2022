@@ -396,6 +396,18 @@ class Mm {
     return res
   }
 
+  downp(x: number, y: number, d?: number) {
+    if (this.down_on(x, y, d)) {
+      return this.just_down
+    }
+  }
+
+  down_on(x: number, y: number, d: number = sml_distance) {
+    if (this.down_p) {
+      return calc_dist(x, y, ...this.down_p) <= d
+    }
+  }
+
   hovering(x: number, y: number, d: number = sml_distance) {
     if (this.move_p) {
       return calc_dist(x, y, ...this.move_p) <= d
@@ -407,12 +419,14 @@ class Mm {
   down_p?: [number, number]
   last_up_p?: [number, number]
   last_down_p?: [number, number]
+  just_down: boolean = false
 
   on_move(e: [number, number]) {
     this.move_p = e
   }
 
   on_down(e: [number, number]) {
+    this.just_down = true
     this.down_p = e
   }
 
@@ -420,6 +434,10 @@ class Mm {
     this.last_up_p = e
     this.last_down_p = this.down_p
     this.down_p = undefined
+  }
+
+  clear_frame() {
+    this.just_down = false
   }
 }
 
@@ -454,6 +472,9 @@ class Gg {
 
   fc(c: string) {
     this.cx.fillStyle = c
+  }
+  sml3() {
+    this.cx.font = '52px Courier New'
   }
   sml2() {
     this.cx.font = '72px Courier New'
@@ -807,7 +828,14 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
       //adio.psfx2()
       adio.psfx3()
     }
+  } else {
+    let d_audio = m.downp(0, 0, 360)
+    if (d_audio) {
+      adio.enable = !adio.enable
+    }
   }
+
+
 
 
   let ppp = PpP.P(life + 10)
@@ -830,7 +858,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   }
 
   if (ss.ps.length < PpP.pp) {
-    ss.ps.push([0, a8 * 2 + e_sex(life) * hw, a8 + a3 * 2 + e_sin(life * 0.02) * 100])
+    ss.ps.push([0, a8 * 2 + e_sex(life) * hw, a3 + a3 * 2 + e_sin(life * 0.02) * 100])
   }
 
   if (ss.idps.length < PpP.pp / 2) {
@@ -857,9 +885,6 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   }
 
 
-
-
-
   /* Background */
 
  g.if(true) /* bg always */
@@ -867,6 +892,17 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   g.fc(bgn)
   g.fr(0, 0, w, h)
 
+  
+
+  let h_audio = m.hovering(0, 0, 360)
+
+  g.fc(h_audio ? m_red : l_bgn)
+  g.sml3()
+  g.if(!adio.enable)
+  g.str("audio off", a3 * 2, a)
+  g.else()
+  g.str("audio on", a3 * 2, a)
+  g.if(true)
 
   g.sc(yllw)
   g.bp()
@@ -910,6 +946,8 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
     g.dot(hw + e_cos(i) * e_cos(u_angle * 10) * r, hh + e_sin(i) * u_angle * 10 * r * 2, 10)
   }
   g.ep()
+
+
 
  g.if(scn == 'ntr' || scn == 'trs') /* intro */
 
@@ -981,6 +1019,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   let hovering = m.hovering(btn_x, btn_y, 120)
   let color = hovering ? red : yllw
 
+  g.sml2()
   g.fc(yllw)
   g.sc(color)
   g.save()
@@ -1022,6 +1061,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   g.rsto()
 
 
+  g.lrg()
   for (let i = 0; i < ss.hnd.length; i++) {
     g.if(ss.mdl[i] === 1)
       g.bp()
@@ -1191,7 +1231,9 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   }
   g.ep()
   g.rsto()
-  
+
+
+  m.clear_frame()
 }
 
 
