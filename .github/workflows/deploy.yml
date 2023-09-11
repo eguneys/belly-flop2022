@@ -17,7 +17,8 @@ jobs:
           package_json_file: belly-flop/package.json
       - name: Build
         run: |
-          pnpm -C belly-flop dist
+          cd belly-flop
+          pnpm dist
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
