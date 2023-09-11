@@ -21,10 +21,11 @@ class Aa {
   enable = false
 
   static init() {
-    let cx = new AudioContext()
+    let cx: AudioContext
 
-    const pulse = () => {
+    const init = () => { cx = new AudioContext() }
 
+    const _pulse = () => {
       const sqr_curve = new Float32Array(256)
       sqr_curve.fill(-1, 0, 128)
       sqr_curve.fill(1, 128, 256)
@@ -66,9 +67,10 @@ class Aa {
       }
     }
 
-    const sigm = (z) => 1 / (1 + Math.exp(-z))
+    const sigm = (z: number) => 1 / (1 + Math.exp(-z))
 
     const ch4 = () => {
+      if (!cx) { return }
 
       const n_curve = new Float32Array(256)
       for (let i = 0; i < 256; i++) {
@@ -121,6 +123,8 @@ class Aa {
     }
 
     const sfx = () => {
+      if (!cx) { return }
+
       let ct = cx.currentTime
       let at = 0.06
       let dcy = 0.2
@@ -135,8 +139,8 @@ class Aa {
       rels = Math.max(rels, 0.03 - (at + dcy + sus))
 
       
-      let osc1 = pulse()
-      let osc2 = pulse()
+      let osc1 = _pulse()
+      let osc2 = _pulse()
 
       osc1.osc.detune.setValueAtTime(0.4, ct)
       osc2.osc.detune.setValueAtTime(+1, ct)
@@ -194,7 +198,7 @@ class Aa {
       lfo_gain.connect(osc1.width)
       lfo_gain.connect(osc2.width)
 
-      let lfo2 = pulse()
+      let lfo2 = _pulse()
       lfo2.osc.frequency.setValueAtTime(m2f(E4), ct)
       lfo2.width.setValueAtTime(0.25, ct)
       let lfo2_gain = cx.createGain()
@@ -285,6 +289,7 @@ class Aa {
     }
 
     let res = new Aa(
+      () => init(),
       () => sfx(), 
       () => ch4())
 
@@ -292,9 +297,9 @@ class Aa {
   }
 
   constructor(
+    readonly ccx: () => void,
     readonly sfx2: () => void,
     readonly sfx3: () => void) {}
-
 
   psfx2() {
     if (!this.enable) {
@@ -304,14 +309,16 @@ class Aa {
     this.sfx2()
   }
 
+  cool_sfx: number = 0
   psfx3() {
     if (!this.enable) {
       return
     }
-
-    this.sfx3()
+    if (this.cool_sfx === 0) {
+      this.cool_sfx = 8
+      this.sfx3()
+    }
   }
-
 }
 
 
@@ -464,7 +471,18 @@ class Gg {
 
   constructor(readonly cx: CanvasRenderingContext2D) {}
 
+  shk_bg(x: number, y: number, a: number, sx: number, sy: number) {
+    this.cx.save()
+    this.cx.translate(hw, hh)
+    this.cx.translate(x, y)
+    this.cx.rotate(a)
+    this.cx.scale(sx, sy)
+    this.cx.translate(-hw, -hh)
+  }
 
+  shk_fi() {
+    this.cx.restore()
+  }
 
   sc(c: string) {
     this.cx.strokeStyle = c
@@ -654,7 +672,7 @@ function app(e: HTMLElement) {
     loop(m, g, adio, ss)
 
 
-    dt = t - (last_t ?? (t - 16))
+    dt = Math.min(16, t - (last_t ?? (t - 16)))
     last_t = t
     life += dt
     window.requestAnimationFrame(step)
@@ -696,6 +714,7 @@ const rnd19 = () => Math.random() * 19
 const _rnd_13 = <A>(f: (v: number) => A) => f(rnd19() % 13 / 13)
 
 const fls = <A>(h: A, l: A) => _rnd_13((v: number) => (life * 0.000003 % v) / (v * 1.2) < 0.5 ? h : l)
+const ffls = <A>(h: A, l: A) => _rnd_13((v: number) => (life * 0.0003 % v) / (v * 1.2) < 0.5 ? h : l)
 
 
 const e_sex = _mod_13((x: number) => fls(x, x * 2) * 0.1 + e_sin(x) * 0.3 + 0.7 * e_sin(x * x * pi2 * pi2))
@@ -797,13 +816,18 @@ const _capa = (f: number) => {
 const s_capa = _capa(13 * 16)
 const o_capa = _capa(1)
 
+const sh_capa = _capa(13 * 2.5)
+
 
 const tr_ = _tr()
 
-let scn = 'ply'
+let scn = 'ntr'
 
 let first_update = false
 let first_interaction = false
+
+let first_welcome = 1
+let first_in_play = false
 
 function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
@@ -822,43 +846,80 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
   if (!first_interaction) {
     if (m.down_p) {
+      adio.ccx()
       first_interaction = true
       adio.enable = true
+      first_welcome = -3
 
       //adio.psfx2()
       adio.psfx3()
     }
   } else {
-    let d_audio = m.downp(0, 0, 360)
-    if (d_audio) {
-      adio.enable = !adio.enable
+    if (adio) {
+      let d_audio = m.downp(0, 0, 360)
+      if (d_audio) {
+        adio.enable = !adio.enable
+      }
+  
+      adio.cool_sfx = Math.max(0, adio.cool_sfx - dt)
     }
   }
 
+  if (first_welcome == 0) {
 
+    let click = m.downp(0, 0, 1920)
 
+    if (click) {
+      scn = 'play'
+    }
+
+  }
+  if (first_welcome < 0) {
+    first_welcome = Math.min(0, first_welcome + dt / 1000)
+  }
 
   let ppp = PpP.P(life + 10)
 
   PpP.pp = PpP.P(life)
 
   let strc = Math.abs(ppp - PpP.pp) > 6
+  if (ppp > 80) {
+
+    strc = true
+  }
 
   let c_strc = s_capa(strc)
   let o_strc = o_capa(strc)
 
   if (o_strc) {
-    adio.psfx3()
+    adio?.psfx3()
   }
+
+  let str_shake = sh_capa(strc)
+
+
+  g.if(str_shake)
+  g.shk_bg(e_sin(life * 0.02) * 5, e_cos(life * 0.002) * 3, 
+           e_sex(life * 0.001) * h64p - e_brz(u_angle * 10) * h64p, 
+           1 + e_saw(life * e_lin(life * 0.18)) * 0.2, 1 + e_saw(life * e_lin(life * 0.24)) * 0.2)
+  g.if(true)
+
+  for (let x of ss.xs) {
+    x[2] += e_lin(life * 0.002) * 10 + e_sex(life * 0.002) * 5
+  }
+  ss.xs = ss.xs.filter(_ => _[2] < h)
 
   if (ss.ps.length > PpP.pp) {
     if (ss.idps.length > 0) {
-      ss.ps.splice(ss.idps.pop()!, 1)
+      let xx = ss.ps.splice(ss.idps.pop()!, 1)
+
+      ss.xs.push(...xx)
+      ss.xs.sort((a, b) => a[1] - b[1])
     }
   }
 
   if (ss.ps.length < PpP.pp) {
-    ss.ps.push([0, a8 * 2 + e_sex(life) * hw, a3 + a3 * 2 + e_sin(life * 0.02) * 100])
+    ss.ps.push([0, a8 + a3 * 2 + e_sex(life) * hw, a3 + a3 * 2 + e_sin(life * 0.02) * 100])
   }
 
   if (ss.idps.length < PpP.pp / 2) {
@@ -898,7 +959,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
   g.fc(h_audio ? m_red : l_bgn)
   g.sml3()
-  g.if(!adio.enable)
+  g.if(!adio?.enable)
   g.str("audio off", a3 * 2, a)
   g.else()
   g.str("audio on", a3 * 2, a)
@@ -929,8 +990,6 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
 
   let r = 40
-
-
   g.sc(l_lyllw)
   g.bp(4)
   for (let i = 0; i < 14; i++) {
@@ -949,9 +1008,24 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
 
 
- g.if(scn == 'ntr' || scn == 'trs') /* intro */
+ if (first_interaction && first_welcome === 0) {
+  if (scn === 'ntr') {
+    g.if(true)
+    g.sml()
+    g.fc(yllw)
+    g.if(fls(true, false))
+    g.str('goo;d click to start', hw, hh * 1.5)
+    g.else()
+    g.str('good; click to start', hw, hh * 1.5)
+  }
+ } else {
+   g.lrg()
+   g.fc(ffls(m_red, l_red))
+   g.str('lower your volume', hw, hh)
+ }
 
 
+if (scn == 'ntr') {
   let ld = e_lin(life * 0.007)
   g.sc(bgn)
   g.bp(2)
@@ -960,14 +1034,13 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   g.m2(hw, hh)
   g.l2(hw + 100, hh)
   g.ep()
-     
+}
+    
 
- g.if(scn == 'trs') /* transition */
+if (scn === 'play') {
 
 
-
- g.if(scn == 'ply') /* play */
-
+  g.if(true)
   g.sc(_l_sat('#cdcddc'))
   g.bp(3)
   for (let i = 1; i < 13; i++) {
@@ -990,10 +1063,25 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   g.ep()
 
 
+  g.if(true)
+  g.sc(l_bgn)
+  g.bp()
+  for (let i = 0; i < ss.xs.length; i++) {
+    let [_r, px, py] = ss.xs[i]
+    if (i == 0) {
+      g.m2(px, py)
+    } else {
+      g.l2(px, py)
+    }
+  }
+  g.ep()
+
+
 
 
   /* Foreground */
 
+  g.if(true)
   const hi_lo_red = hi_lo(m_red, red, l_red)
 
   g.sc(hi_lo_red)
@@ -1085,6 +1173,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   g.if(true)
 
   /* plants */
+
   for (let i = 0; i < ss.ps.length; i++) {
     let [r, px, py] = ss.ps[i]
 
@@ -1131,7 +1220,6 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
     g.rsto()
 
   }
-
 
   /* light */
   g.if(c_strc)
@@ -1232,6 +1320,12 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   g.ep()
   g.rsto()
 
+}
+
+  g.if(str_shake)
+  g.shk_fi()
+  g.if(true)
+
 
   m.clear_frame()
 }
@@ -1259,9 +1353,12 @@ class Ss {
 
   hnd!: [number, number, number, number, number]
   mdl!: [number, number, number, number, number]
+  xs!: [number, number, number][]
 
   static init(): Ss {
     let res = new Ss()
+
+    res.xs = []
 
     res.ps = [[0, 50, 130], [pi, 300, 300]]
 
