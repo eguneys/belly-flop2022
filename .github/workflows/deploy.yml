@@ -15,8 +15,9 @@ jobs:
         with:
           run-install: false
       - name: Build
-        run: pnpm install -C belly-flop
-        run: pnpm dist -C belly-flop
+        run: |
+          pnpm install -C belly-flop
+          pnpm dist -C belly-flop
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
