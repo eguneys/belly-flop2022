@@ -19,7 +19,7 @@ jobs:
         run: |
           cd belly-flop
           pnpm install
-          pnpm dist
+          pnpm build
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
