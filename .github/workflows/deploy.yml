@@ -13,7 +13,7 @@ jobs:
         name: Install pnpm
         id: pnpm-install
         with:
-          run_install: false
+          package_json_file: belly-flop/package.json
       - name: Build
         run: |
           pnpm install -C belly-flop
