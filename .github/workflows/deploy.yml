@@ -9,11 +9,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Change Directory
+        run: cd belly-flop
       - uses: pnpm/action-setup@v2
         name: Install pnpm
         id: pnpm-install
-      - name: Change Directory
-        run: cd belly-flop
       - name: Build
         run: pnpm dist
       - name: Deploy
