@@ -100,10 +100,10 @@ class Aa {
       lfo_gain.connect(gain.gain)
 
 
+      console.log('on')
       lfo2.start()
       lfo.start()
       osc.start()
-
 
       gain.gain.setValueAtTime(0.5, ct)
       lfo_gain.gain.setValueAtTime(1, ct)
@@ -115,6 +115,7 @@ class Aa {
       gain.gain.linearRampToValueAtTime(0, ct + 2.4)
 
       setTimeout(() => {
+        console.log('off')
         osc.stop()
         lfo.stop()
         lfo2.stop()
@@ -861,7 +862,7 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
         adio.enable = !adio.enable
       }
   
-      adio.cool_sfx = Math.max(0, adio.cool_sfx - dt)
+      adio.cool_sfx = Math.max(0, adio.cool_sfx - dt / 1000)
     }
   }
 
@@ -878,7 +879,10 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
     first_welcome = Math.min(0, first_welcome + dt / 1000)
   }
 
-  let ppp = PpP.P(life + 10)
+  let strc = false, c_strc = false, o_strc = false
+if (scn === 'play') {
+
+  let ppp = PpP.P(life + 30)
 
   PpP.pp = PpP.P(life)
 
@@ -888,21 +892,16 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
     strc = true
   }
 
-  let c_strc = s_capa(strc)
-  let o_strc = o_capa(strc)
+  c_strc = s_capa(strc)
+  o_strc = o_capa(strc)
+  console.log(ppp, PpP.pp)
 
   if (o_strc) {
     adio?.psfx3()
   }
 
-  let str_shake = sh_capa(strc)
 
 
-  g.if(str_shake)
-  g.shk_bg(e_sin(life * 0.02) * 5, e_cos(life * 0.002) * 3, 
-           e_sex(life * 0.001) * h64p - e_brz(u_angle * 10) * h64p, 
-           1 + e_saw(life * e_lin(life * 0.18)) * 0.2, 1 + e_saw(life * e_lin(life * 0.24)) * 0.2)
-  g.if(true)
 
   for (let x of ss.xs) {
     x[2] += e_lin(life * 0.002) * 10 + e_sex(life * 0.002) * 5
@@ -944,6 +943,17 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
       ss.mdl[i] = 1
     }
   }
+
+}
+
+  let str_shake = sh_capa(strc)
+  g.if(str_shake)
+  g.shk_bg(e_sin(life * 0.02) * 5, e_cos(life * 0.002) * 3, 
+           e_sex(life * 0.001) * h64p - e_brz(u_angle * 10) * h64p, 
+           1 + e_saw(life * e_lin(life * 0.18)) * 0.2, 1 + e_saw(life * e_lin(life * 0.24)) * 0.2)
+  g.if(true)
+
+
 
 
   /* Background */

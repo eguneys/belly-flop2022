@@ -6,14 +6,16 @@ export default defineConfig({
   build: {
     minify: 'terser',
     terserOptions: {
+      /*
       mangle: {
         module: true,
         properties: {
-          //debug: true,
+          debug: true,
           keep_quoted: 'strict',
-          reserved: []
+          reserved: ['P', 'if', 'else']
         }
       }
+      */
     },
     modulePreload: {
       polyfill: false,
