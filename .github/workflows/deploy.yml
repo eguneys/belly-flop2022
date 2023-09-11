@@ -13,6 +13,7 @@ jobs:
         name: Install pnpm
         id: pnpm-install
         with:
+          version: 8.7.1
           package_json_file: belly-flop/package.json
       - name: Build
         run: |
