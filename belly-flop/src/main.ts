@@ -871,7 +871,7 @@ let first_welcome = 1
 let first_in_play = false
 
 // DEBUG
-// if (false)
+if (false)
 {
   scn = 'play'
   first_interaction = true
@@ -1038,6 +1038,20 @@ if (scn === 'play') {
 
   g.fc(bgn)
   g.fr(0, 0, w, h)
+
+
+  /* wind bg */
+  g.sc(l_grn)
+  g.bp()
+  for (let i = 0; i < 80; i+=7 - e_lin(life * 0.002) * 5) {
+    let [x, y] = [e_lin(life * 0.01) * w + e_lin(life * 0.002 * e_sin(i)) * w, e_sin(i / 80 * life * 0.0002) * hh + e_sex(life * 0.02 * i/ 80) * e_brz(life * 0.02 * i/ 80) * a + (i / 80)  * hh]
+
+    g.m2(x, y)
+    g.l2(x + a, y)
+
+  }
+  g.ep()
+
 
   
 
@@ -1278,6 +1292,20 @@ if (scn === 'play') {
       g.str(`${ss.mdl[i]}`, hw - a3 * (3 - i), hh + 30 + e_saw(life) * Math.abs(20 * e_sex(w_angle))* Math.abs(e_sin(w_angle)) * 50)
   }
   g.if(true)
+
+  /* wind fg */
+
+  g.sc(m_lght)
+  g.bp()
+  for (let i = 0; i < 80; i+=1 + e_lin(life * 0.002) * 5) {
+    let [x, y] = [e_lin(life * 0.01) * w + e_lin(life * 0.002 * e_sin(i)) * w, e_sin(i / 80 * life * 0.0002) * hh + e_sex(life * 0.02 * i/ 80) * e_brz(life * 0.02 * i/ 80) * a + (i / 80)  * hh]
+
+    g.m2(x, y)
+    g.l2(x + a, y)
+
+  }
+  g.ep()
+
 
   /* plants */
 
