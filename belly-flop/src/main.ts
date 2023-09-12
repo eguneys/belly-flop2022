@@ -871,12 +871,54 @@ let first_welcome = 1
 let first_in_play = false
 
 // DEBUG
-if (false)
+//if (false)
 {
   scn = 'play'
   first_interaction = true
   first_welcome = 0
 }
+
+
+const pom = `
+Have A ponderful day in the middle east, in the middle ages.
+
+Dark windy shadows /bc no sun or numbers.
+Oh numbers /w there don't get me /w
+..
+Numbers just d/t add up.
+
+So stop looking at /m numbers,
+And start looking at my shadow.
+
+
+Wind fell through cracks.
+/T dice /vs /T plop
+Yes, and yes they fought.
+Wind get's to dice\\y sometimes.
+Sometime\s it plop\\s though.
+
+
+Here\ have a plant, it's root based.
+The root's span acroos \\t display.
+The root's are old \\a wise.
+Yes, and yes it takes a \\l \\t \\t \\e.
+For a A looong looooooong time.
+A very looong time. ok.
+That's why they called the root\\s
+
+Good, have a \\root now.
+\\a always be planking.
+maybe you can overrule the shadows.
+
+            /The shizwhiz. ///
+
+
+`
+
+const txts = pom.split('\n')
+
+
+let hack_t = 0
 
 function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
@@ -928,6 +970,18 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   }
 
   let strc = false, c_strc = false, o_strc = false
+
+
+  let [btn_x, btn_y] = [hw - h2w - h4w, hh + 2 * h3h]
+  let hovering2 = m.hovering(btn_x, btn_y, 360)
+  let hovering = m.hovering(btn_x, btn_y, 120)
+  let color = hovering ? red : yllw
+
+  let down_on = m.down_on(btn_x, btn_y, 120)
+  let upp = ud_capa(!!m.upp(btn_x, btn_y, 120))
+
+
+
 if (scn === 'play') {
 
 
@@ -995,20 +1049,33 @@ if (scn === 'play') {
     }
   }
 
-  if (Math.abs(e_sin(life * 0.02) + e_sin(life * 0.01)) < 10 * Math.sin(u_angle) ) {
-    let i = ss.mdl.findIndex(_ => e_lin(life * 100) < 0.1 && _ === 0)
-    if (i !== -1) {
-      ss.mdl[i] = (Math.floor(Math.abs(e_sin(life * 0.3)) * 7) % 3) + 2
+  if (down_on) {
+    for (let i = 0; i < e_lin(life * 0.002) * 6; i++) {
+      ss.mdl[i] = Math.abs(Math.ceil(e_sex(life * 0.002 + i * e_sin(i * life * 0.003) * 0.3) * 9))
     }
-    ss.mdl.reverse()
-  }
+    hack_t = 0
 
-  if (e_sin(life * 0.02) + e_sin(life * 0.01) < 0.05) {
-    let r = ss.mdl.findIndex(_ => _ === 1)
-    let i = ss.mdl.findIndex(_ => e_lin(life * 7) < 0.1 && _ > 1)
-    if (i !== -1) {
-      ss.mdl[r] = 0
-      ss.mdl[i] = 1
+  } else if (upp) {
+    hack_t += dt / 1000
+    for (let i = 0; i < e_lin(hack_t * 0.02) * 6000; i++) {
+      ss.mdl[i] = Math.abs(Math.ceil(e_sex(hack_t * 0.02 + i) * 9))
+    }
+  } else {
+    if (Math.abs(e_sin(life * 0.02) + e_sin(life * 0.01)) < 10 * Math.sin(u_angle) ) {
+      let i = ss.mdl.findIndex(_ => e_lin(life * 100) < 0.1 && _ === 0)
+      if (i !== -1) {
+        ss.mdl[i] = (Math.floor(Math.abs(e_sin(life * 0.3)) * 7) % 3) + 2
+      }
+      ss.mdl.reverse()
+    }
+
+    if (e_sin(life * 0.02) + e_sin(life * 0.01) < 0.05) {
+      let r = ss.mdl.findIndex(_ => _ === 1)
+      let i = ss.mdl.findIndex(_ => e_lin(life * 7) < 0.1 && _ > 1)
+      if (i !== -1) {
+        ss.mdl[r] = 0
+        ss.mdl[i] = 1
+      }
     }
   }
 
@@ -1053,6 +1120,14 @@ if (scn === 'play') {
   g.ep()
 
 
+  let i = Math.floor(e_lin(life * 0.0002) * txts.length)
+  g.fc(m_bgn)
+  g.fr(0, hh - a, w, a3)
+  g.fc(l_blu)
+  g.fr(0, hh - a, (i / txts.length) * w, a3)
+  g.fc(m_yllw)
+  g.sml3()
+  g.str(txts[i], hw, hh)
   
 
   let h_audio = m.hovering(0, 0, 360)
@@ -1202,14 +1277,7 @@ if (scn === 'play') {
   g.ep()
 
 
-  let [btn_x, btn_y] = [hw - h2w - h4w, hh + 2 * h3h]
-  let hovering2 = m.hovering(btn_x, btn_y, 360)
-  let hovering = m.hovering(btn_x, btn_y, 120)
-  let color = hovering ? red : yllw
-
-  let down_on = m.down_on(btn_x, btn_y, 120)
-  let upp = ud_capa(!!m.upp(btn_x, btn_y, 120))
-
+  /* dice button */
 
   g.sml2()
   g.fc(yllw)
