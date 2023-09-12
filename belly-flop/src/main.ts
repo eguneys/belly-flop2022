@@ -9,7 +9,7 @@ const [D4, A4] = [62, 69]
 const A3 = 57
 const F3 = 53
 
-const ctve_down = 0.7
+const ctve_down = 0
 
 let ntes = [C4, G4, A4, E4, C4, F3, E4].map(_ => _ - 12 * ctve_down)
 let pttns = ['333333', '21221', '1111', '2221', '33333']
@@ -18,14 +18,25 @@ let pttn = [...Array(300).keys()].flatMap(_ => pttns[_%pttns.length].split(''))
 
 class Aa {
 
-  enable = false
+  _enable: boolean = false
+  set enable(v: boolean) {
+    this._enable = v
+    if (!this._enable) {
+      this._stop_music?.()
+    } else {
+      if (this._stop_music) {
+        this.psfx2()
+      }
+    }
+  }
+
+  get enable() {
+    return this._enable
+  }
 
   static init() {
-    let cx: AudioContext
 
-    const init = () => { cx = new AudioContext() }
-
-    const _pulse = () => {
+    const _pulse = (cx: AudioContext) => {
       const sqr_curve = new Float32Array(256)
       sqr_curve.fill(-1, 0, 128)
       sqr_curve.fill(1, 128, 256)
@@ -68,9 +79,7 @@ class Aa {
     }
 
 
-    const ch4 = () => {
-      if (!cx) { return }
-
+    const ch4 = (cx: AudioContext) => {
       const n_curve = new Float32Array(256)
       for (let i = 0; i < 256; i++) {
         let v = Math.random() * i/256 + sigm(Math.random() * i * 256 + Math.sin(i / 256 * pi))
@@ -103,6 +112,7 @@ class Aa {
       lfo.start()
       osc.start()
 
+      osc.frequency.setValueAtTime(m2f(A3), ct)
       gain.gain.setValueAtTime(0.5, ct)
       lfo_gain.gain.setValueAtTime(1, ct)
       lfo.frequency.setValueAtTime(128, ct)
@@ -120,9 +130,7 @@ class Aa {
       }, 2800)
     }
 
-    const sfx = () => {
-      if (!cx) { return }
-
+    const sfx = (cx: AudioContext) => {
       let ct = cx.currentTime
       let at = 0.06
       let dcy = 0.2
@@ -130,15 +138,15 @@ class Aa {
       let rels = 0.2
       let sst_lvl = 0.2
       let dcy_lvl = 0.18
-      let slp = 0.2
+      let slp = 0.3
 
-      let n = 4
+      let n = 0.066
       ;[at, dcy, sus, rels] = [at, dcy, sus, rels].map(_ => _ / n)
       rels = Math.max(rels, 0.03 - (at + dcy + sus))
 
       
-      let osc1 = _pulse()
-      let osc2 = _pulse()
+      let osc1 = _pulse(cx)
+      let osc2 = _pulse(cx)
 
       osc1.osc.detune.setValueAtTime(0.4, ct)
       osc2.osc.detune.setValueAtTime(+1, ct)
@@ -148,10 +156,6 @@ class Aa {
 
       let hpf = cx.createBiquadFilter()
       hpf.type = 'highpass'
- 
-
-      //let panner = cx.createStereoPanner()
-      //panner.pan.setValueAtTime(0, ct)
 
       let cmprsr = cx.createDynamicsCompressor()
       cmprsr.threshold.setValueAtTime(-30, ct)
@@ -183,20 +187,26 @@ class Aa {
         gain2.connect(gain)
       }
 
-      gain.connect(cx.destination)
+      let l_panner = cx.createPanner()
+      let r_panner = cx.createPanner()
+
+      gain.connect(l_panner)
+      gain.connect(r_panner)
+      l_panner.connect(cx.destination)
+      r_panner.connect(cx.destination)
 
       let lfo = cx.createOscillator()
-      lfo.type = 'sine'
-      lfo.frequency.setValueAtTime(7, ct)
+      lfo.type = 'square'
+      lfo.frequency.setValueAtTime(70, ct)
 
       let lfo_gain = cx.createGain()
       lfo_gain.gain.setValueAtTime(0.8, ct)
       lfo.connect(lfo_gain)
       //lfo_gain.connect(lpf.frequency)
-      lfo_gain.connect(osc1.width)
-      lfo_gain.connect(osc2.width)
+      //lfo_gain.connect(osc1.width)
+      //lfo_gain.connect(osc2.width)
 
-      let lfo2 = _pulse()
+      let lfo2 = _pulse(cx)
       lfo2.osc.frequency.setValueAtTime(m2f(E4), ct)
       lfo2.width.setValueAtTime(0.25, ct)
       let lfo2_gain = cx.createGain()
@@ -225,6 +235,13 @@ class Aa {
           
           let note = ntes[index%ntes.length]
 
+
+          l_panner.positionY.setValueAtTime(-1, t)
+          l_panner.positionY.linearRampToValueAtTime(0, t + at + dcy)
+          r_panner.positionY.setValueAtTime(0, t)
+          r_panner.positionY.setValueAtTime(0, t + at + dcy)
+          r_panner.positionY.linearRampToValueAtTime(1, t + at + dcy + sus + rels)
+
           osc1.osc.frequency.setValueAtTime(m2f(note), t)
           osc2.osc.frequency.setValueAtTime(m2f(note + 3), t)
 
@@ -235,17 +252,17 @@ class Aa {
           osc1.width.linearRampToValueAtTime(0.2, t + at + dcy + sus)
           osc2.width.linearRampToValueAtTime(0.2, t + at + dcy + sus)
 
-          lpf.Q.value = 2
-          lpf.frequency.setValueAtTime(1400, t)
-          lpf.frequency.linearRampToValueAtTime(500, t + at)
-          lpf.frequency.linearRampToValueAtTime(2400, t + at + dcy)
+          lpf.Q.value = 1
+          lpf.frequency.setValueAtTime(700, t)
+          lpf.frequency.linearRampToValueAtTime(250, t + at)
+          lpf.frequency.linearRampToValueAtTime(1400, t + at + dcy)
           lpf.frequency.linearRampToValueAtTime(1000, t + at + dcy + sus + rels)
 
           hpf.Q.value = 1
-          hpf.frequency.setValueAtTime(100, t)
-          hpf.frequency.linearRampToValueAtTime(300, t + at)
-          hpf.frequency.linearRampToValueAtTime(800, t + at + dcy + sus)
-          hpf.frequency.linearRampToValueAtTime(100, t + at + dcy + sus + rels)
+          hpf.frequency.setValueAtTime(1000, t)
+          hpf.frequency.linearRampToValueAtTime(3000, t + at)
+          hpf.frequency.linearRampToValueAtTime(8000, t + at + dcy + sus)
+          hpf.frequency.linearRampToValueAtTime(1000, t + at + dcy + sus + rels)
 
           gain1.gain.setValueAtTime(epsi, t)
           gain2.gain.setValueAtTime(epsi, t)
@@ -277,26 +294,32 @@ class Aa {
       }
       loop(ct)
 
-      /*
-      setTimeout(() => {
-        osc1.stop()
-        osc2.stop()
-        gain.disconnect()
-      }, dur_sec * 1000)
-      */
+      return () => {
+        osc1.osc.stop()
+        osc2.osc.stop()
+        l_panner.disconnect()
+        r_panner.disconnect()
+      }
+    }
+
+    let sfx_cx: AudioContext, msc_cx: AudioContext
+
+    const init = () => { 
+      sfx_cx = new AudioContext() 
+      msc_cx = new AudioContext() 
     }
 
     let res = new Aa(
       () => init(),
-      () => sfx(), 
-      () => ch4())
+      () => sfx(sfx_cx), 
+      () => ch4(msc_cx))
 
     return res
   }
 
   constructor(
     readonly ccx: () => void,
-    readonly sfx2: () => void,
+    readonly sfx2: () => () => void,
     readonly sfx3: () => void) {}
 
   psfx2() {
@@ -304,7 +327,7 @@ class Aa {
       return
     }
 
-    this.sfx2()
+    this._stop_music = this.sfx2()
   }
 
   cool_sfx: number = 0
@@ -317,6 +340,9 @@ class Aa {
       this.sfx3()
     }
   }
+
+
+  _stop_music?: () => void
 }
 
 
@@ -871,7 +897,7 @@ let first_welcome = 1
 let first_in_play = false
 
 // DEBUG
-//if (false)
+if (false)
 {
   scn = 'play'
   first_interaction = true
@@ -942,7 +968,6 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
       adio.enable = true
       first_welcome = -3
 
-      //adio.psfx2()
       adio.psfx3()
     }
   } else {
@@ -956,12 +981,15 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
     }
   }
 
-  if (first_welcome == 0) {
+  if (scn === 'ntr' && first_welcome == 0) {
 
     let click = m.downp(0, 0, 1920)
 
     if (click) {
       scn = 'play'
+
+      console.log('here')
+      adio.psfx2()
     }
 
   }
@@ -1119,6 +1147,7 @@ if (scn === 'play') {
   }
   g.ep()
 
+  if (scn == 'play') {
 
   let i = Math.floor(e_lin(life * 0.0002) * txts.length)
   g.fc(m_bgn)
@@ -1129,6 +1158,7 @@ if (scn === 'play') {
   g.sml3()
   g.str(txts[i], hw, hh)
   
+  }
 
   let h_audio = m.hovering(0, 0, 360)
 
