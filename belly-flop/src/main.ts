@@ -904,6 +904,13 @@ if (false)
   first_welcome = 0
 }
 
+if (false)
+{
+  scn = 'fin'
+  first_interaction = true
+  first_welcome = 0
+}
+
 
 const pom = `
 Have A ponderful day in the middle east, in the middle ages.
@@ -986,9 +993,9 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
     let click = m.downp(0, 0, 1920)
 
     if (click) {
+      life = dt
       scn = 'play'
 
-      console.log('here')
       adio.psfx2()
     }
 
@@ -1158,6 +1165,19 @@ if (scn === 'play') {
   g.sml3()
   g.str(txts[i], hw, hh)
   
+  if (i + 1 >= txts.length) {
+    scn = 'fin'
+    life = dt
+  }
+  }
+
+  if (scn == 'fin') {
+
+    g.fc(m_lght)
+    g.sml3()
+    for (let i = 0; i < txts.length; i++) {
+      g.str(txts[i], hw, e_sin(pi2 + life * 0.0001) * h * 2 + hh + i * 80)
+    }
   }
 
   let h_audio = m.hovering(0, 0, 360)
