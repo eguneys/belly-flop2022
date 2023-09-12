@@ -67,7 +67,6 @@ class Aa {
       }
     }
 
-    const sigm = (z: number) => 1 / (1 + Math.exp(-z))
 
     const ch4 = () => {
       if (!cx) { return }
@@ -100,7 +99,6 @@ class Aa {
       lfo_gain.connect(gain.gain)
 
 
-      console.log('on')
       lfo2.start()
       lfo.start()
       osc.start()
@@ -115,7 +113,6 @@ class Aa {
       gain.gain.linearRampToValueAtTime(0, ct + 2.4)
 
       setTimeout(() => {
-        console.log('off')
         osc.stop()
         lfo.stop()
         lfo2.stop()
@@ -316,7 +313,7 @@ class Aa {
       return
     }
     if (this.cool_sfx === 0) {
-      this.cool_sfx = 8
+      this.cool_sfx = 3
       this.sfx3()
     }
   }
@@ -404,9 +401,24 @@ class Mm {
     return res
   }
 
+  upp(x: number, y: number, d?: number) {
+    if (this.up_on(x, y, d)) {
+      return this.just_up
+    }
+  }
+
+
+
   downp(x: number, y: number, d?: number) {
     if (this.down_on(x, y, d)) {
       return this.just_down
+    }
+  }
+
+
+  up_on(x: number, y: number, d: number = sml_distance) {
+    if (this.last_down_p) {
+      return calc_dist(x, y, ...this.last_down_p) <= d
     }
   }
 
@@ -428,6 +440,7 @@ class Mm {
   last_up_p?: [number, number]
   last_down_p?: [number, number]
   just_down: boolean = false
+  just_up: boolean = false
 
   on_move(e: [number, number]) {
     this.move_p = e
@@ -442,10 +455,12 @@ class Mm {
     this.last_up_p = e
     this.last_down_p = this.down_p
     this.down_p = undefined
+    this.just_up = true
   }
 
   clear_frame() {
     this.just_down = false
+    this.just_up = false
   }
 }
 
@@ -691,6 +706,7 @@ const juicyNoise = (x: number) => {
 };
 
 
+const sigm = (z: number) => 1 / (1 + Math.exp(-z))
 const lin = (x: number) => x
 const sin = (x: number) => Math.sin(x)
 const cos = (x: number) => Math.cos(x)
@@ -752,12 +768,12 @@ class Pp {
 }
 
 const PpP = new Pp({
-  A: epsi,
+  A: epsi * 4,
   ω: pi,
   φ: 0,
   B: epsi,
-  C: 3,
-  R: epsi * 10,
+  C: 1,
+  R: epsi * 6,
 })
 
 const _one = () => {
@@ -819,6 +835,30 @@ const o_capa = _capa(1)
 
 const sh_capa = _capa(13 * 2.5)
 
+const ud_capa = _capa(13 * 6)
+
+const dest = [0.001, 0.001, 0.001, 0.001, 0.001]
+
+const o_fns = [
+  () => Math.abs(e_sex(life * sigm(dest[0]))) < sigm(dest[0]) * 0.001,
+  () => Math.abs(e_lin(life * sigm(dest[1]))) < sigm(dest[1]) * 0.001,
+  () => Math.abs(e_sin(life * sigm(dest[2]))) < sigm(dest[2]) * 0.001,
+  () => Math.abs(e_nine(life * sigm(dest[3]))) < sigm(dest[3]) * 0.001,
+  () => Math.abs(e_cos(life * sigm(dest[4]))) < sigm(dest[4]) * 0.0001
+]
+
+
+const o_h_capas = [
+  _capa(1),
+  _capa(1),
+  _capa(1),
+  _capa(1),
+  _capa(1),
+  _capa(1),
+  _capa(1),
+  _capa(1),
+]
+
 
 const tr_ = _tr()
 
@@ -829,6 +869,14 @@ let first_interaction = false
 
 let first_welcome = 1
 let first_in_play = false
+
+// DEBUG
+// if (false)
+{
+  scn = 'play'
+  first_interaction = true
+  first_welcome = 0
+}
 
 function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
 
@@ -882,19 +930,39 @@ function loop(m: Mm, g: Gg, adio: Aa, ss: Ss) {
   let strc = false, c_strc = false, o_strc = false
 if (scn === 'play') {
 
+
+
+  let x = ss.mdl.findIndex(_ => _ === 1)
+  if (x !== -1) {
+    dest[x] += Math.min(...dest)
+  }
+
+  let luck = 8 - Math.abs(Math.sin(life * 0.001)) * 3
+  let dtroy = dest.reduce((a, b) => a + b)
+
+  if (dtroy > luck) {
+    dest[dest.indexOf(Math.max(...dest))] = 0.00001
+    PpP.pp =  Math.sqrt(Math.sqrt(PpP.pp))
+    life = Math.sqrt(Math.sqrt(life))
+  } else {
+    dest[dest.indexOf(Math.min(...dest))] += 0.000001
+  }
+
   let ppp = PpP.P(life + 30)
 
   PpP.pp = PpP.P(life)
 
-  let strc = Math.abs(ppp - PpP.pp) > 6
+  strc = Math.abs(ppp - PpP.pp) > 6
   if (ppp > 80) {
 
     strc = true
   }
 
+
+
+
   c_strc = s_capa(strc)
   o_strc = o_capa(strc)
-  console.log(ppp, PpP.pp)
 
   if (o_strc) {
     adio?.psfx3()
@@ -944,6 +1012,17 @@ if (scn === 'play') {
     }
   }
 
+
+
+  /* hands */
+
+  for (let i = 0; i < 5; i++) {
+    if (o_h_capas[i](o_fns[i]())) {
+
+      ss.hnd[i] = (ss.hnd[i] + 1) % 5
+    }
+  }
+
 }
 
   let str_shake = sh_capa(strc)
@@ -952,9 +1031,6 @@ if (scn === 'play') {
            e_sex(life * 0.001) * h64p - e_brz(u_angle * 10) * h64p, 
            1 + e_saw(life * e_lin(life * 0.18)) * 0.2, 1 + e_saw(life * e_lin(life * 0.24)) * 0.2)
   g.if(true)
-
-
-
 
   /* Background */
 
@@ -1117,6 +1193,10 @@ if (scn === 'play') {
   let hovering = m.hovering(btn_x, btn_y, 120)
   let color = hovering ? red : yllw
 
+  let down_on = m.down_on(btn_x, btn_y, 120)
+  let upp = ud_capa(!!m.upp(btn_x, btn_y, 120))
+
+
   g.sml2()
   g.fc(yllw)
   g.sc(color)
@@ -1124,10 +1204,27 @@ if (scn === 'play') {
   g.rotate(h8p + u_angle, btn_x, btn_y)
   g.sr(300, 100)
   if (hovering) {
+    if (upp) {
+      g.fc(m_red)
+      g.str('D', -70 + e_sex(life) * 10, ffls(e_sin(life), -e_lin(life) * 2) * e * 3 + -22)
+      g.fc(fls(m_red, l_red))
+      g.str('I', -20 + e_nine(life) * 10, e_sin(life) * e * 4 + -14)
+      g.fc(m_red)
+      g.str('C', 20 + e_sex(life) * 10, ffls(e_sin(life), -e_lin(life) * 2) * e * 2 + -24)
+      g.fc(fls(l_red, m_red))
+      g.str('E', 50 + e_nine(life) * 10, e_sin(life) * e * 3 + -12)
+    } else if (down_on) {
+      g.fc(l_red)
+      g.str('d', -70 + u_s_f40 * 10, -22)
+      g.str('i', -20 + u_s_f40 * 10, -14)
+      g.str('c', 20 + u_s_f40 * 10, -24)
+      g.str('e', 50 + u_s_f40 * 10, -12)
+    } else {
     g.str('d', -140 + u_s_f40 * 40, -30)
     g.str('i', -50 + u_s_f40 * 40, -30)
     g.str('c', 50 + u_s_f40 * 40, -30)
     g.str('e', 140 + u_s_f40 * 40, -30)
+    }
   } else if (hovering2) {
     g.fc(m_yllw)
     g.str('dice', 0, 0)
@@ -1255,6 +1352,13 @@ if (scn === 'play') {
   let lm = 1.2
   let sp = 1.3
 
+  let fs = ss.hnd
+  let ccs = [m_blu, m_yllw, m_grn, m_prpl, prpl]
+  for (let i = 0; i < 5; i++) {
+    g.fc(ccs[i])
+    g.fr(w - a8 + 5, a * 2 + a3 * 1.25 * i, e * 13, (fs[i] / 5) * (a3 * 1.25))
+  }
+
   g.fc(blu)
   g.sml()
   g.str('wind', w - a3 * lm, a3 * sp - a3 * tm)
@@ -1263,7 +1367,6 @@ if (scn === 'play') {
   g.fr(w - a8 + 5, a3 * sp - a3 * tm + a3, a8 - 15, 5)
 
   g.fr(w - a8 + 5 + a8 - 15, a3 * sp - a3 * tm - 20, 5, a3 * 8 - 32)
-
 
   g.fc(yllw)
   g.sml()
@@ -1354,6 +1457,12 @@ const sml_distance = 100
 const lrg_distance = 300
 
 
+const WND = 0
+const SN = 1
+const PT = 2
+const SE = 3
+const RO = 4
+const SNS = [WND, SN, PT, SE, RO]
 
 class Ss {
 
@@ -1372,9 +1481,9 @@ class Ss {
 
     res.ps = [[0, 50, 130], [pi, 300, 300]]
 
-    res.hnd = [5, 4, 3, 2, 1]
+    res.hnd = [1, 1, 0, 0, 0]
 
-    res.mdl = [0, 1, 1, 1, 0]
+    res.mdl = [1, 1, 0, 0, 0]
 
     res.idps = []
 
